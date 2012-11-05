@@ -20,18 +20,21 @@ freeman_to_vector = {
     7: np.array([-sqrt_half, sqrt_half])
     }
 
-def show_cont_change(image):
+def cont_angles(image):
     seq = cv.FindContours(image, cv.CreateMemStorage(), cv.CV_RETR_TREE, cv.CV_CHAIN_CODE)
     angles = freeman_to_angles(seq, gaussian(11, 3))
-    diff = [angle_diff(angles[n], angles[n - 1]) for n in range(len(angles))]
-    cv.Set(image, 0)
-    cv.DrawContours(image, seq, cv.Scalar(255), cv.Scalar(255), 0)
+    diff = [angle_deriv(angles, n) for n in range(len(angles))]
+    del seq   # associated storage is also released
+    return angles
 
-    #show(image)
-    #plot(seq)
+def show_cont_change(image):
+    angles = cont_angles(image)
+    diff = cont_deriv(angles)
     plot(angles)
     plot(diff)
-    del seq   # associated storage is also released
+
+def cont_deriv(angles):
+    return [angle_deriv(angles, n) for n in range(len(angles))]
 
 def freeman_to_angles(fr, conv_window=None):
     vectors = [freeman_to_vector[f] for f in fr]
@@ -52,6 +55,13 @@ def angle_diff(a, b):
     elif d < -180:
         d += 360
     return d
+
+def angle_deriv(angles, i):
+    """Five-point stencil"""
+    y1 = angle_diff(angles[i], angles[i - 1])
+    y2 = angle_diff(angles[i - 1], angles[i - 2])
+    y3 = angle_diff(angles[(i + 1) % len(angles)], angles[i])
+    return (7 * y1 - y2 - y3) / 6
 
 def convolve_window_wrap(a, w):
     """Might normalize w"""
