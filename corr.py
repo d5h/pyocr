@@ -13,19 +13,22 @@ from cont import cont_angles, cont_deriv
 def image_corr(i, j):
     ai = cont_angles(i)
     aj = cont_angles(j)
-    from show import plot
+    return cont_corr(ai, aj)
+
+def cont_corr(ai, aj):
+    #from show import plot
     if len(ai) < len(aj):
         aj = scale_size(aj, ai)
     elif len(aj) < len(ai):
         ai = scale_size(ai, aj)
-    di = cont_deriv(ai)
-    dj = cont_deriv(aj)
+    #di = cont_deriv(ai)
+    #dj = cont_deriv(aj)
     #plot(ai, 'r', aj, 'b')
     k = find_shift(ai, aj)
     ai = phase_shift(ai, k)
-    di = phase_shift(di, k)
-    plot(ai, 'r', aj, 'b')
-    return pearsonr(ai, aj)[0], pearsonr(di, dj)[0]
+    #di = phase_shift(di, k)
+    #plot(ai, 'r', aj, 'b')
+    return pearsonr(ai, aj)[0]  #, pearsonr(di, dj)[0]
 
 def scale_size(a, s):
     na = len(a)
