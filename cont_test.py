@@ -9,50 +9,77 @@ import cont_table
 from corr import cont_corr
 
 
+class Classifications(object):
+
+    def __init__(self):
+        self.correlations = {}
+        self.winner = None
+        self.max_certainty = 0.0
+        self.sum_correlations = 0.0
+
+    def add(self, char, correlation):
+        ac = abs(correlation)
+        self.correlations[char] = correlation
+        self.sum_correlations += ac
+        if self.max_certainty < ac:
+            self.winner = char
+            self.max_certainty = ac
+
+    def certainty(self, char):
+        return abs(self.correlations[char]) / self.sum_correlations
+
+    def rankings(self, limit=None, ignore_case=True):
+        r = sorted(self.correlations, key=self.certainty, reverse=True)
+        if ignore_case:
+            seen = set()
+            r = [c for c in r if c not in seen and not seen.add(c)]
+        if limit is not None:
+            r = r[:limit]
+        return r
+
 def test(image):
+    classifications = Classifications()
     cont = cont_angles(image)
-    guess = ''
-    max_corr = 0
     for c, a in cont_table.angles.items():
         corr = cont_corr(cont, a)
-        if max_corr < corr:
-            guess = c
-            max_corr = corr
+        classifications.add(c, corr)
 
-    return guess, max_corr
+    return classifications
 
 def score_files(files, ignore_case=True):
     correct = 0
-    min_correct_corr = 1
-    ave_correct_corr = 0
-    max_incorrect_corr = 0
-    ave_incorrect_corr = 0
+    min_correct_certainty = 1
+    ave_correct_certainty = 0
+    max_incorrect_certainty = 0
+    ave_incorrect_certainty = 0
     incorrect = {}
     for f in files:
         char = os.path.basename(f)[0]  # Assume filename starts with char
         i = cv.LoadImageM(f, cv.CV_LOAD_IMAGE_GRAYSCALE)
-        guess, corr = test(i)
+        classifications = test(i)
+        guess = classifications.winner
+        cert = classifications.certainty(guess)
         if ignore_case:
             char = char.lower()
             guess = guess.lower()
         if guess == char:
             correct += 1
-            min_correct_corr = min(corr, min_correct_corr)
-            ave_correct_corr += corr
+            min_correct_certainty = min(cert, min_correct_certainty)
+            ave_correct_certainty += cert
         else:
-            incorrect[char] = guess, corr
-            max_incorrect_corr = max(max_incorrect_corr, corr)
-            ave_incorrect_corr += corr
+            incorrect[char] = classifications.winner, cert, classifications.rankings(limit=4)[1:]
+            max_incorrect_certainty = max(max_incorrect_certainty, cert)
+            ave_incorrect_certainty += cert
 
     n = len(files)
-    ave_correct_corr = float(ave_correct_corr) / n
-    ave_incorrect_corr = float(ave_incorrect_corr) / n
+    ave_correct_certainty = float(ave_correct_certainty) / correct
+    ave_incorrect_certainty = float(ave_incorrect_certainty) / (n - correct)
     print 'Classified %d/%d correctly (%.2f%%)' % (correct, n, 100. * correct / n)
-    print 'Average correlation for correct classification: %.3f (min: %.3f)' % (ave_correct_corr, min_correct_corr)
-    print 'Average correlation for incorrect classification: %.3f (max: %.3f)' % (ave_incorrect_corr, max_incorrect_corr)
+    print 'Average certainty for correct classification: %.3f (min: %.3f)' % (ave_correct_certainty, min_correct_certainty)
+    print 'Average certainty for incorrect classification: %.3f (max: %.3f)' % (ave_incorrect_certainty, max_incorrect_certainty)
     print 'Incorrect classifications:'
-    for c, (g, r) in incorrect.items():
-        print '\tThought %s was %s (corr: %.3f)' % (c, g, r)
+    for c, (g, r, alt) in incorrect.items():
+        print '\tThought %s was %s (certainty: %.3f); alternatives were %s' % (c, g, r, ', '.join(alt))
 
 if __name__ == '__main__':
     import sys
