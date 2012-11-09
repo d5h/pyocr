@@ -15,8 +15,7 @@ def image_corr(i, j):
     aj = cont_angles(j)
     return cont_corr(ai, aj)
 
-def cont_corr(ai, aj):
-    #from show import plot
+def cont_corr(ai, aj, show=False):
     if len(ai) < len(aj):
         aj = scale_size(aj, ai)
     elif len(aj) < len(ai):
@@ -27,7 +26,9 @@ def cont_corr(ai, aj):
     k = find_shift(ai, aj)
     ai = phase_shift(ai, k)
     #di = phase_shift(di, k)
-    #plot(ai, 'r', aj, 'b')
+    if show:
+        from show import plot
+        plot(ai, 'r', aj, 'b')
     return pearsonr(ai, aj)[0]  #, pearsonr(di, dj)[0]
 
 def scale_size(a, s):

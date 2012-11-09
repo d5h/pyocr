@@ -37,11 +37,13 @@ class Classifications(object):
             r = r[:limit]
         return r
 
-def test(image):
+def test(image, char=None):
     classifications = Classifications()
     cont = cont_angles(image)
     for c, a in cont_table.angles.items():
-        corr = cont_corr(cont, a)
+        #print c
+        corr = cont_corr(cont, a) #, show=(c in 'QpPO'))
+        #print ("corr(%s, %s) = %.3f" % (char, c, corr))
         classifications.add(c, corr)
 
     return classifications
@@ -56,9 +58,10 @@ def score_files(files, ignore_case=True):
     for f in files:
         char = os.path.basename(f)[0]  # Assume filename starts with char
         i = cv.LoadImageM(f, cv.CV_LOAD_IMAGE_GRAYSCALE)
-        classifications = test(i)
+        classifications = test(i, char=char)
         guess = classifications.winner
         cert = classifications.certainty(guess)
+        case_char = char
         if ignore_case:
             char = char.lower()
             guess = guess.lower()
@@ -67,7 +70,7 @@ def score_files(files, ignore_case=True):
             min_correct_certainty = min(cert, min_correct_certainty)
             ave_correct_certainty += cert
         else:
-            incorrect[char] = classifications.winner, cert, classifications.rankings(limit=4)[1:]
+            incorrect[case_char] = classifications.winner, cert, classifications.rankings(limit=4)[1:]
             max_incorrect_certainty = max(max_incorrect_certainty, cert)
             ave_incorrect_certainty += cert
 
@@ -86,6 +89,6 @@ if __name__ == '__main__':
     args = sys.argv[1:]
     if len(args) == 1:
         i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
-        print test(i)
+        print test(i).winner
     else:
         score_files(args)
