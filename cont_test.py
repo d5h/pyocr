@@ -13,20 +13,21 @@ class Classifications(object):
 
     def __init__(self):
         self.correlations = {}
-        self.winner = None
-        self.max_certainty = 0.0
+        self.errors = {}
         self.sum_correlations = 0.0
+        self.max_error = 0.0
 
-    def add(self, char, correlation):
-        ac = abs(correlation)
+    def add(self, char, correlation, error):
         self.correlations[char] = correlation
-        self.sum_correlations += ac
-        if self.max_certainty < ac:
-            self.winner = char
-            self.max_certainty = ac
+        self.errors[char] = error
+        self.sum_correlations += abs(correlation)
+        self.max_error = max(self.max_error, error)
 
     def certainty(self, char):
-        return abs(self.correlations[char]) / self.sum_correlations
+        return abs(self.correlations[char]) * self.error_factor(char) / self.sum_correlations
+
+    def error_factor(self, char):
+        return 1 - float(self.errors[char]) / self.max_error
 
     def rankings(self, limit=None, ignore_case=True):
         r = sorted(self.correlations, key=self.certainty, reverse=True)
@@ -42,9 +43,9 @@ def test(image, char=None):
     cont = cont_angles(image)
     for c, a in cont_table.angles.items():
         #print c
-        corr = cont_corr(cont, a) #, show=(c in 'QpPO'))
-        #print ("corr(%s, %s) = %.3f" % (char, c, corr))
-        classifications.add(c, corr)
+        corr, error = cont_corr(cont, a) #, show=(c in 'QpPO'))
+        #print ("corr(%s, %s) = %.3f; error = %.1f" % (char, c, corr, error))
+        classifications.add(c, corr, error)
 
     return classifications
 
@@ -59,9 +60,11 @@ def score_files(files, ignore_case=True):
         char = os.path.basename(f)[0]  # Assume filename starts with char
         i = cv.LoadImageM(f, cv.CV_LOAD_IMAGE_GRAYSCALE)
         classifications = test(i, char=char)
-        guess = classifications.winner
+        rankings = classifications.rankings(limit=4)
+        guess = rankings[0]
         cert = classifications.certainty(guess)
         case_char = char
+        case_guess = guess
         if ignore_case:
             char = char.lower()
             guess = guess.lower()
@@ -70,7 +73,7 @@ def score_files(files, ignore_case=True):
             min_correct_certainty = min(cert, min_correct_certainty)
             ave_correct_certainty += cert
         else:
-            incorrect[case_char] = classifications.winner, cert, classifications.rankings(limit=4)[1:]
+            incorrect[case_char] = case_guess, cert, rankings[1:]
             max_incorrect_certainty = max(max_incorrect_certainty, cert)
             ave_incorrect_certainty += cert
 
@@ -89,6 +92,12 @@ if __name__ == '__main__':
     args = sys.argv[1:]
     if len(args) == 1:
         i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
-        print test(i).winner
+        classifications = test(i)
+        rankings = classifications.rankings(limit=4)
+        for r in rankings:
+            print "guess = %s; corr = %.3f; error = %.1f; error_factor = %.3f, certainty = %.4f" % (
+                r, classifications.correlations[r], classifications.errors[r],
+                classifications.error_factor(r), classifications.certainty(r)
+                )
     else:
         score_files(args)

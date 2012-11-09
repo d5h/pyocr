@@ -29,7 +29,7 @@ def cont_corr(ai, aj, show=False):
     if show:
         from show import plot
         plot(ai, 'r', aj, 'b')
-    return pearsonr(ai, aj)[0]  #, pearsonr(di, dj)[0]
+    return pearsonr(ai, aj)[0], sum(abs(ai - aj))  # error
 
 def scale_size(a, s):
     na = len(a)
