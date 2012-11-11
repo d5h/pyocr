@@ -1,44 +1,51 @@
-    Classified 33/52 correctly (63.46%)
-    Average certainty for correct classification: 0.025 (min: 0.014)
-    Average certainty for incorrect classification: 0.018 (max: 0.030)
-    Incorrect classifications:
-              Thought M was o (certainty: 0.015); alternatives were r, q, a
-              Thought e was c (certainty: 0.030); alternatives were e, C, r
-              Thought W was i (certainty: 0.018); alternatives were r, o, I
-              Thought g was r (certainty: 0.014); alternatives were i, o, l
-              Thought f was o (certainty: 0.014); alternatives were f, i, r
-              Thought i was j (certainty: 0.016); alternatives were R, g, k
-              Thought h was n (certainty: 0.014); alternatives were o, h, p
-              Thought m was i (certainty: 0.016); alternatives were q, m, r
-              Thought l was j (certainty: 0.021); alternatives were i, l, I
-              Thought p was r (certainty: 0.015); alternatives were i, P, o
-              Thought q was i (certainty: 0.016); alternatives were o, D, r
-              Thought I was j (certainty: 0.018); alternatives were F, i, R
-              Thought R was P (certainty: 0.017); alternatives were p, n, o
-              Thought Q was o (certainty: 0.021); alternatives were Q, O, r
-              Thought t was r (certainty: 0.020); alternatives were i, T, f
-              Thought w was r (certainty: 0.018); alternatives were i, o, l
-              Thought H was o (certainty: 0.017); alternatives were i, l, d
-              Thought P was r (certainty: 0.017); alternatives were i, j, o
-              Thought T was r (certainty: 0.020); alternatives were T, i, B
+Checking serif vs sans:
 
-This is the state of affairs.  Looking at some of the weirder failures
-in this set (M & W) reveals a few things.  First, the correlation
-value with the correct letter is higher than that of the matched
-letter.  The algorithm picked the wrong letter because the error
-between the chosen letter was much lower than the correct answer.  It
-seems like error is hard to compare in a controlled way.  It seems
-helpful only when deciding between several letters who have very
-similar correlations.  Hence a good next step is to look for a group
-of letters on the high end of the correlation distribution, and only
-apply error as a tie-breaker between them.  If the highest correlation
-is very far from the second highest, don't look at error.  We could
-also implement this as using correlation to weigh error.
+Classified 33/52 correctly (63.46%)
+Average certainty for correct classification: 0.032 (min: 0.021)
+Average certainty for incorrect classification: 0.025 (max: 0.029)
+Incorrect classifications:
+          Thought B was I (certainty: 0.024); alternatives were l, i, B
+          Thought D was l (certainty: 0.025); alternatives were I, B, D
+          Thought g was r (certainty: 0.023); alternatives were i, g, q
+          Thought H was s (certainty: 0.027); alternatives were H, i, F
+          Thought i was j (certainty: 0.026); alternatives were g, R, F
+          Thought J was R (certainty: 0.026); alternatives were j, E, F
+          Thought l was R (certainty: 0.024); alternatives were i, l, I
+          Thought M was q (certainty: 0.024); alternatives were M, o, p
+          Thought n was R (certainty: 0.027); alternatives were h, J, o
+          Thought p was i (certainty: 0.024); alternatives were r, P, l
+          Thought P was i (certainty: 0.025); alternatives were r, F, l
+          Thought q was i (certainty: 0.025); alternatives were I, o, l
+          Thought Q was o (certainty: 0.027); alternatives were O, Q, i
+          Thought r was i (certainty: 0.023); alternatives were T, I, l
+          Thought R was j (certainty: 0.029); alternatives were n, J, P
+          Thought T was B (certainty: 0.026); alternatives were l, I, D
+          Thought w was L (certainty: 0.023); alternatives were o, l, I
+          Thought W was L (certainty: 0.024); alternatives were o, q, I
+          Thought Y was r (certainty: 0.026); alternatives were Y, o, b
 
-One way to implement this is to normalize the range of both the set of
-correlations and error factors to span [0,1] before multiplying them.
-This avoids giving unequal weight to one or the other implicitly.
-This is essentially a means of combining two rankings.
+Results for sign1:
+
+Classified 10/15 correctly (66.67%)
+Average certainty for correct classification: 0.029 (min: 0.025)
+Average certainty for incorrect classification: 0.028 (max: 0.032)
+Incorrect classifications:
+          Thought G was c (certainty: 0.032); alternatives were C, e, G
+          Thought H was K (certainty: 0.025); alternatives were H, k, b
+          Thought M was b (certainty: 0.030); alternatives were w, W, M
+          Thought N was K (certainty: 0.028); alternatives were k, i, b
+          Thought P was o (certainty: 0.026); alternatives were O, Q, i
+
+Most results look fairly sane.  We can add second (encolsed) contour
+checks which I think will improve some of these a bit.  We can still
+check out some of the incorrect responses, but it seems like progress
+is slowing down on this classifier, and it does a decent job.  Even
+for those it doesn't classify correctly, the correct character is
+often in the top four ranking.  This means we could match the word to
+a dictionary and probably get good results.
+
+Not sure if we still want to look into weighing correlation more than
+error, etc.
 
 Another observation is that when looking at plots of contour angles,
 they often line up at the beginning, but start shifting out of phase
@@ -52,13 +59,6 @@ for each segment should at least be increasing, although we can
 tolerate some overlap or gaps.  Then average the correlations and
 errors.
 
-Parking sign images correlate OK, 53% in one test with relatively
-small character images.  I noticed the same problem with shifts in the
-contour angle graphs.  When you look at the graphs, you notice flat
-sections lining up but then ending earlier or later in the different
-curves.  Then they start getting further and further misaligned.
-Since the flat sections correspond to straight line portions of the
-letters, it occurred to me that we should scale the letters to the
-same aspect ration before extracting contours to alleviate that
-problem.  (The only thing I worry about with this is scaling very
-small images may not work so well.)
+Might be time to move on to a second classifier soon.  I'm thinking
+just doing template matching.  We also need to start working on words.
+The clustering approach worked promisingly before.
