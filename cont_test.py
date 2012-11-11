@@ -43,8 +43,8 @@ def test(image, char=None):
     cont = cont_angles(image)
     for c, a in cont_table.angles.items():
         #print c
-        corr, error = cont_corr(cont, a) #, show=(c in 'QpPO'))
-        #print ("corr(%s, %s) = %.3f; error = %.1f" % (char, c, corr, error))
+        corr, error = cont_corr(cont, a) #, show=(c in 'WiIro'))
+        print ("corr(%s, %s) = %.3f; error = %.1f" % (char, c, corr, error))
         classifications.add(c, corr, error)
 
     return classifications
@@ -99,5 +99,11 @@ if __name__ == '__main__':
                 r, classifications.correlations[r], classifications.errors[r],
                 classifications.error_factor(r), classifications.certainty(r)
                 )
+        if False:  # plot distributions
+            from show import hist
+            corrs = classifications.correlations.values()
+            errs = [classifications.error_factor(c) for c in classifications.errors]
+            certs = [classifications.certainty(c) for c in classifications.correlations]
+            hist([corrs, errs, certs], bins=100, label=['correlations', 'error factors', 'certainties'])
     else:
         score_files(args)
