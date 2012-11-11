@@ -1,0 +1,57 @@
+    Classified 33/52 correctly (63.46%)
+    Average certainty for correct classification: 0.025 (min: 0.014)
+    Average certainty for incorrect classification: 0.018 (max: 0.030)
+    Incorrect classifications:
+              Thought M was o (certainty: 0.015); alternatives were r, q, a
+              Thought e was c (certainty: 0.030); alternatives were e, C, r
+              Thought W was i (certainty: 0.018); alternatives were r, o, I
+              Thought g was r (certainty: 0.014); alternatives were i, o, l
+              Thought f was o (certainty: 0.014); alternatives were f, i, r
+              Thought i was j (certainty: 0.016); alternatives were R, g, k
+              Thought h was n (certainty: 0.014); alternatives were o, h, p
+              Thought m was i (certainty: 0.016); alternatives were q, m, r
+              Thought l was j (certainty: 0.021); alternatives were i, l, I
+              Thought p was r (certainty: 0.015); alternatives were i, P, o
+              Thought q was i (certainty: 0.016); alternatives were o, D, r
+              Thought I was j (certainty: 0.018); alternatives were F, i, R
+              Thought R was P (certainty: 0.017); alternatives were p, n, o
+              Thought Q was o (certainty: 0.021); alternatives were Q, O, r
+              Thought t was r (certainty: 0.020); alternatives were i, T, f
+              Thought w was r (certainty: 0.018); alternatives were i, o, l
+              Thought H was o (certainty: 0.017); alternatives were i, l, d
+              Thought P was r (certainty: 0.017); alternatives were i, j, o
+              Thought T was r (certainty: 0.020); alternatives were T, i, B
+
+This is the state of affairs.  Looking at some of the weirder failures
+in this set (M & W) reveals a few things.  First, the correlation
+value with the correct letter is higher than that of the matched
+letter.  The algorithm picked the wrong letter because the error
+between the chosen letter was much lower than the correct answer.  It
+seems like error is hard to compare in a controlled way.  It seems
+helpful only when deciding between several letters who have very
+similar correlations.  Hence a good next step is to look for a group
+of letters on the high end of the correlation distribution, and only
+apply error as a tie-breaker between them.  If the highest correlation
+is very far from the second highest, don't look at error.  We could
+also implement this as using correlation to weigh error.
+
+One way to implement this is to normalize the range of both the set of
+correlations and error factors to span [0,1] before multiplying them.
+This avoids giving unequal weight to one or the other implicitly.
+This is essentially a means of combining two rankings.
+
+Another observation is that when looking at plots of contour angles,
+they often line up at the beginning, but start shifting out of phase
+towards the end.  (Look into why cross-correlation lines the beginning
+up more than the end.)  This can be true of letters with different
+thickness, or with serifs, etc., when the permiter of one letter is
+longer than the other.  An idea to mitigate this is to split one
+contour angle vector into sections (say 10), and then doing a
+correlation on each with the other letter contour.  The mean x values
+for each segment should at least be increasing, although we can
+tolerate some overlap or gaps.  Then average the correlations and
+errors.
+
+We should also test this algorithm out on parking sign images before
+tweaking much more, as there are no serifs, and we may be closer to
+done than when dealing with fonts.
