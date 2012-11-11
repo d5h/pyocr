@@ -4,6 +4,7 @@ import os
 
 import cv
 
+from aspect import adjust_aspect
 from cont import cont_angles
 import cont_table
 from corr import cont_corr
@@ -40,10 +41,11 @@ class Classifications(object):
 
 def test(image, char=None):
     classifications = Classifications()
+    image = adjust_aspect(image, binarize=True)
     cont = cont_angles(image)
     for c, a in cont_table.angles.items():
-        #print c
-        corr, error = cont_corr(cont, a) #, show=(c in 'WiIro'))
+        print c
+        corr, error = cont_corr(cont, a)#, show=(c in 'PoDBi'))
         print ("corr(%s, %s) = %.3f; error = %.1f" % (char, c, corr, error))
         classifications.add(c, corr, error)
 
@@ -55,7 +57,7 @@ def score_files(files, ignore_case=True):
     ave_correct_certainty = 0
     max_incorrect_certainty = 0
     ave_incorrect_certainty = 0
-    incorrect = {}
+    incorrect = []
     for f in files:
         char = os.path.basename(f)[0]  # Assume filename starts with char
         i = cv.LoadImageM(f, cv.CV_LOAD_IMAGE_GRAYSCALE)
@@ -73,7 +75,7 @@ def score_files(files, ignore_case=True):
             min_correct_certainty = min(cert, min_correct_certainty)
             ave_correct_certainty += cert
         else:
-            incorrect[case_char] = case_guess, cert, rankings[1:]
+            incorrect.append((case_char, case_guess, cert, rankings[1:]))
             max_incorrect_certainty = max(max_incorrect_certainty, cert)
             ave_incorrect_certainty += cert
 
@@ -84,7 +86,7 @@ def score_files(files, ignore_case=True):
     print 'Average certainty for correct classification: %.3f (min: %.3f)' % (ave_correct_certainty, min_correct_certainty)
     print 'Average certainty for incorrect classification: %.3f (max: %.3f)' % (ave_incorrect_certainty, max_incorrect_certainty)
     print 'Incorrect classifications:'
-    for c, (g, r, alt) in incorrect.items():
+    for c, g, r, alt in incorrect:
         print '\tThought %s was %s (certainty: %.3f); alternatives were %s' % (c, g, r, ', '.join(alt))
 
 if __name__ == '__main__':

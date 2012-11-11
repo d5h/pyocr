@@ -52,6 +52,13 @@ for each segment should at least be increasing, although we can
 tolerate some overlap or gaps.  Then average the correlations and
 errors.
 
-We should also test this algorithm out on parking sign images before
-tweaking much more, as there are no serifs, and we may be closer to
-done than when dealing with fonts.
+Parking sign images correlate OK, 53% in one test with relatively
+small character images.  I noticed the same problem with shifts in the
+contour angle graphs.  When you look at the graphs, you notice flat
+sections lining up but then ending earlier or later in the different
+curves.  Then they start getting further and further misaligned.
+Since the flat sections correspond to straight line portions of the
+letters, it occurred to me that we should scale the letters to the
+same aspect ration before extracting contours to alleviate that
+problem.  (The only thing I worry about with this is scaling very
+small images may not work so well.)

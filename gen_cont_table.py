@@ -4,6 +4,7 @@ import os
 
 import cv
 
+from aspect import adjust_aspect
 from cont import cont_angles
 from corr import cont_corr
 
@@ -14,6 +15,7 @@ class ContTable(object):
         self._cont = {}
 
     def add(self, char, image):
+        image = adjust_aspect(image, binarize=True)
         self._cont[char] = cont_angles(image)
 
     def save(self, filename='cont_table.py'):
