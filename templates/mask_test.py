@@ -18,7 +18,12 @@ class MaskClassifications(Classifications):
         self._total += sum
 
     def certainty(self, char):
-        return self._sums[char] / self._total
+        c = self._sums[char] / self._total
+        # Note that simply punishing these letters increases accuracy
+        # from ~69% to 75% in one test.
+        #if char in 'Iil':
+        #    c /= 2.0
+        return c
 
     def rankings(self, limit=None, ignore_case=True):
         r = sorted(self._sums, key=self.certainty, reverse=True)
