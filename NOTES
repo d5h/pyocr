@@ -1,3 +1,28 @@
+General
+=======
+
+We also need to start working on words.  The clustering approach
+worked promisingly before.
+
+We may want to design some classifiers specifically for
+differentiating between specific common letters.  E.g., if we think
+something is a c, run simple classifiers to separate it from e and G.
+These could be as simple as looking for pixels in specific areas.  It
+would be cool if we had a learning algorithm that figured out the best
+points to check for us.
+
+We could also use the alternatives themselves to classify.  E.g., if
+we see that P often matches O and Q, then if we see those letters high
+in the rankings, it lends weight to the correct choice being a P.  Of
+course, we need to avoid classifying O or Q as P just because they are
+similar, but it basically gives us a clustering algorithm from which
+we may be able to detect drastic misclassifications.  E.g., if we the
+top rankings aren't in a known cluster, it indicates the guess is a
+bad one.
+
+Contours
+========
+
 Checking serif vs sans:
 
 Classified 33/52 correctly (63.46%)
@@ -59,22 +84,56 @@ for each segment should at least be increasing, although we can
 tolerate some overlap or gaps.  Then average the correlations and
 errors.
 
-Might be time to move on to a second classifier soon.  I'm thinking
-just doing template matching.  We also need to start working on words.
-The clustering approach worked promisingly before.
+Templates
+=========
 
-We may want to design some classifiers specifically for
-differentiating between specific common letters.  E.g., if we think
-something is a c, run simple classifiers to separate it from e and G.
-These could be as simple as looking for pixels in specific areas.  It
-would be cool if we had a learning algorithm that figured out the best
-points to check for us.
+Results for sign1:
 
-We could also use the alternatives themselves to classify.  E.g., if
-we see that P often matches O and Q, then if we see those letters high
-in the rankings, it lends weight to the correct choice being a P.  Of
-course, we need to avoid classifying O or Q as P just because they are
-similar, but it basically gives us a clustering algorithm from which
-we may be able to detect drastic misclassifications.  E.g., if we the
-top rankings aren't in a known cluster, it indicates the guess is a
-bad one.
+Classified 5/16 correctly (31.25%)
+Average certainty for correct classification: 0.029 (min: 0.025)
+Average certainty for incorrect classification: 0.027 (max: 0.031)
+Incorrect classifications:
+          Thought A was l (certainty: 0.029); alternatives were A, I, a
+          Thought A was I (certainty: 0.031); alternatives were l, A, i
+          Thought G was c (certainty: 0.027); alternatives were o, s, G
+          Thought H was i (certainty: 0.027); alternatives were R, I, a
+          Thought K was i (certainty: 0.028); alternatives were l, K, I
+          Thought M was n (certainty: 0.025); alternatives were M, N, H
+          Thought M was i (certainty: 0.025); alternatives were n, N, u
+          Thought N was i (certainty: 0.025); alternatives were N, I, l
+          Thought R was i (certainty: 0.028); alternatives were I, l, a
+          Thought R was i (certainty: 0.030); alternatives were I, l, a
+          Thought s was I (certainty: 0.024); alternatives were i, l, t
+
+This seems to actually work pretty well, except that everything
+matches I/i/l.  Obviously this is just because those masks are
+basically solid blocks of ones, so it's essentially about the best you
+can do with ones alone.  The only reason the true letter does better
+is it also gets values from the zeros, of which there are typically
+far less.  Hence, an idea is to add extra weight to the zeros.  We can
+do this by looking at the ratio of the total number of zeros in both
+images to the total number of ones, and then weighting so that both ON
+and OFF pixels have equal importance.  This seems reasonable for some
+letters, but maybe not all, like for two Is.
+
+A similar thought would be to subtract mismatched pixels so they
+actually count against scoring.
+
+Another idea to mitigate the problem of I/i/l domination is to just
+treat these specially and not even test for them.  We'll need some
+other strategy to observe them.
+
+One problem we may have is that the font for parking signs is thicker
+than that of sans that I'm using for the mask table.  I should
+probably upgrade that to a bold font or something else which is
+thicker.
+
+A more complicated approach to solving the I/i/l problem is to weigh
+the inside of regions more than the outsides.  We could just do this
+in a row-oriented fashion to begin with.  Look at the run length of
+contiguous sections of ones or zeros in each row, and instead of
+counting them all the same, assign weight to them with some
+distribution, such as a gaussian.  Hence, if the masks don't exactly
+line up, we should at least get more from the parts that do.  We need
+to normalize so that the row values sum to the same thing for all
+masks so that we don't introduce bias unfairly.
