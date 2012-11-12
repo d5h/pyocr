@@ -33,9 +33,9 @@ def draw_and_save_image(font, char, image, filename):
     image.save(filename, 'PNG')
 
 def find_font(name):
-    return '/usr/share/fonts/truetype/freefont/FreeSerif.ttf'
+    return '/usr/share/fonts/truetype/freefont/FreeSansBold.ttf'
 
 
 if __name__ == '__main__':
     import sys
-    main('FreeSerif', string.ascii_letters)
+    main('FreeSansBold', string.ascii_letters)
