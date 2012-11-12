@@ -62,3 +62,19 @@ errors.
 Might be time to move on to a second classifier soon.  I'm thinking
 just doing template matching.  We also need to start working on words.
 The clustering approach worked promisingly before.
+
+We may want to design some classifiers specifically for
+differentiating between specific common letters.  E.g., if we think
+something is a c, run simple classifiers to separate it from e and G.
+These could be as simple as looking for pixels in specific areas.  It
+would be cool if we had a learning algorithm that figured out the best
+points to check for us.
+
+We could also use the alternatives themselves to classify.  E.g., if
+we see that P often matches O and Q, then if we see those letters high
+in the rankings, it lends weight to the correct choice being a P.  Of
+course, we need to avoid classifying O or Q as P just because they are
+similar, but it basically gives us a clustering algorithm from which
+we may be able to detect drastic misclassifications.  E.g., if we the
+top rankings aren't in a known cluster, it indicates the guess is a
+bad one.

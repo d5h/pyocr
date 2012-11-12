@@ -8,9 +8,10 @@ from aspect import adjust_aspect
 from cont import cont_angles
 import cont_table
 from corr import cont_corr
+from score import Classifications, score_files
 
 
-class Classifications(object):
+class ContClassifications(Classifications):
 
     def __init__(self):
         self.correlations = {}
@@ -34,15 +35,10 @@ class Classifications(object):
 
     def rankings(self, limit=None, ignore_case=True):
         r = sorted(self.correlations, key=self.certainty, reverse=True)
-        if ignore_case:
-            seen = set()
-            r = [c for c in r if c not in seen and not seen.add(c)]
-        if limit is not None:
-            r = r[:limit]
-        return r
+        return self.filter_rankings(r, limit, ignore_case)
 
 def test(image, char=None):
-    classifications = Classifications()
+    classifications = ContClassifications()
     image = adjust_aspect(image, binarize=True)
     cont = cont_angles(image)
     for c, a in cont_table.angles.items():
@@ -53,43 +49,6 @@ def test(image, char=None):
 
     return classifications
 
-def score_files(files, ignore_case=True):
-    correct = 0
-    min_correct_certainty = 1
-    ave_correct_certainty = 0
-    max_incorrect_certainty = 0
-    ave_incorrect_certainty = 0
-    incorrect = []
-    for f in files:
-        char = os.path.basename(f)[0]  # Assume filename starts with char
-        i = cv.LoadImageM(f, cv.CV_LOAD_IMAGE_GRAYSCALE)
-        classifications = test(i, char=char)
-        rankings = classifications.rankings(limit=4)
-        guess = rankings[0]
-        cert = classifications.certainty(guess)
-        case_char = char
-        case_guess = guess
-        if ignore_case:
-            char = char.lower()
-            guess = guess.lower()
-        if guess == char:
-            correct += 1
-            min_correct_certainty = min(cert, min_correct_certainty)
-            ave_correct_certainty += cert
-        else:
-            incorrect.append((case_char, case_guess, cert, rankings[1:]))
-            max_incorrect_certainty = max(max_incorrect_certainty, cert)
-            ave_incorrect_certainty += cert
-
-    n = len(files)
-    ave_correct_certainty = float(ave_correct_certainty) / correct
-    ave_incorrect_certainty = float(ave_incorrect_certainty) / (n - correct)
-    print 'Classified %d/%d correctly (%.2f%%)' % (correct, n, 100. * correct / n)
-    print 'Average certainty for correct classification: %.3f (min: %.3f)' % (ave_correct_certainty, min_correct_certainty)
-    print 'Average certainty for incorrect classification: %.3f (max: %.3f)' % (ave_incorrect_certainty, max_incorrect_certainty)
-    print 'Incorrect classifications:'
-    for c, g, r, alt in incorrect:
-        print '\tThought %s was %s (certainty: %.3f); alternatives were %s' % (c, g, r, ', '.join(alt))
 
 if __name__ == '__main__':
     import sys
@@ -110,4 +69,4 @@ if __name__ == '__main__':
             certs = [classifications.certainty(c) for c in classifications.correlations]
             hist([corrs, errs, certs], bins=100, label=['correlations', 'error factors', 'certainties'])
     else:
-        score_files(args)
+        score_files(args, test)
