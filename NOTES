@@ -36,6 +36,21 @@ Incorrect classifications:
           Thought G was C (certainty: 0.910); alternatives were c, G, e
           Thought N was H (certainty: 0.714); alternatives were N, K, I
 
+Also good on serif.
+
+Classified 44/52 correctly (84.62%)
+Average certainty for correct classification: 0.918 (min: 0.604)
+Average certainty for incorrect classification: 0.768 (max: 0.993)
+Incorrect classifications:
+          Thought e was C (certainty: 0.993); alternatives were c, e, O
+          Thought G was o (certainty: 0.767); alternatives were C, O, c
+          Thought i was j (certainty: 0.764); alternatives were x, f, X
+          Thought I was j (certainty: 0.692); alternatives were i, t, I
+          Thought l was j (certainty: 0.780); alternatives were f, I, l
+          Thought P was F (certainty: 0.703); alternatives were P, r, y
+          Thought R was P (certainty: 0.573); alternatives were p, e, y
+          Thought t was f (certainty: 0.873); alternatives were t, T, r
+
 Contours
 ========
 
