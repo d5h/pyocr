@@ -3,7 +3,7 @@
 import cv
 import numpy
 
-from show import show as showimg
+from common.show import show as showimg
 
 
 def make_mask(image, width, height, show=False):

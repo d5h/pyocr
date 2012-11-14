@@ -2,7 +2,7 @@
 
 import cv
 
-from show import show as showimg
+from common.show import show as showimg
 
 
 def adjust_aspect(img, a=1.5, show=False, binarize=False):

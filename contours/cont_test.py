@@ -8,7 +8,7 @@ from aspect import adjust_aspect
 from cont import cont_angles
 import cont_table
 from corr import cont_corr
-from score import Classifications, score_files
+from common.score import Classifications, score_files
 
 
 class ContClassifications(Classifications):

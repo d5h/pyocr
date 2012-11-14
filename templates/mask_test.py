@@ -4,7 +4,7 @@ import cv
 
 from mask import cmp_masks, make_mask
 import mask_table
-from score import Classifications, score_files
+from common.score import Classifications, score_files
 
 
 class MaskClassifications(Classifications):

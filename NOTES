@@ -24,6 +24,18 @@ we may be able to detect drastic misclassifications.  E.g., if we the
 top rankings aren't in a known cluster, it indicates the guess is a
 bad one.
 
+Combine
+=======
+
+Dope shit!!!
+
+Classified 13/15 correctly (86.67%)
+Average certainty for correct classification: 0.901 (min: 0.527)
+Average certainty for incorrect classification: 0.812 (max: 0.910)
+Incorrect classifications:
+          Thought G was C (certainty: 0.910); alternatives were c, G, e
+          Thought N was H (certainty: 0.714); alternatives were N, K, I
+
 Contours
 ========
 
