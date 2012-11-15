@@ -24,3 +24,11 @@ We could binarize the image first, then assign some "signal to noise"
 metric to regions.  This could be defined as the main frequency given
 by a FFT (high is noise, low is signal).  Or we just compute the
 average run length of pixels of the same color in each row and column.
+
+Looking at histograms of some signs, it looks like entropy could be a
+decent measure for finding signs, perhaps with a passband of some
+value slightly greater than zero and less than 0.18.  Even that may be
+high.  It looks like most entropy for images with close ups on signs
+are about 0.05.  We should choose the grid size based on the image
+size though, to normalize, and need to play around some more to choose
+a working value.

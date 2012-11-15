@@ -4,7 +4,7 @@ import cv
 
 
 def binary(img):
-    out = cv.CreateImage((img.width, img.height), 8, 1)
+    out = cv.CreateMat(img.height, img.width, cv.CV_8U)
     # Use adaptive thresholding with a large blocksize so that dark
     # text on a light background remain dark.
     cv.AdaptiveThreshold(img, out, 255, blockSize=25)

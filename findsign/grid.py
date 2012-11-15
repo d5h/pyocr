@@ -17,7 +17,17 @@ def iround(x):
 
 if __name__ == '__main__':
     import cv
-    mat = cv.CreateMat(40, 25, cv.CV_8U)
-    def print_rect(m, r):
-        print r
-    grid_map(mat, 4, 2, print_rect)
+    import sys
+    mat = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
+    from common.bin import binary
+    mat = binary(mat)
+    #def print_rect(m, r):
+    #    print m[0,0], r
+    from entropy import entropy
+    data = []
+    def print_entropy(m, r):
+        data.append(entropy(m))
+        print "%s: %s" % (r, data[-1])
+    grid_map(mat, 10, 10, print_entropy)
+    from common.show import hist
+    hist(data)
