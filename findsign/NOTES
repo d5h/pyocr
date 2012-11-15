@@ -1,0 +1,26 @@
+The findsign module extracts the parking sign from the image.  It
+returns a sub image with as little noise as possible, however there
+may be some non-letter objects in the image, such as bolts, arrows,
+etc.
+
+One idea to do this is to first break the image into a grid and look
+at each square in the grid.  Define a set of colors, which are
+represented as vectors in [0,255]^3.  For each pixel in a square, map
+its color to the closest color vector in our set, and count how many
+pixels map to each color.  This basically constructs a histogram, but
+avoid peak-detection on a normal histogram.  The bins should map to
+colors which would normally be used for text and background, such as
+white, black, red, etc.  We expect the squares covering the sign to
+have the majority of their pixels (we can choose the percentage based
+on empirical data) in three bins, and adjacent squares covering the
+sign to use the same bins, etc.  We can then stitch together the
+rectangle bounding the sign with this info.  However, I don't really
+like the idea of relying on color to find the sign.  Intuitively, we
+should be able to find the sign in a binary image.
+
+I like the idea of the grid though.  I think a better metric than
+color diversity is some measure of entropy in the squares of the grid.
+We could binarize the image first, then assign some "signal to noise"
+metric to regions.  This could be defined as the main frequency given
+by a FFT (high is noise, low is signal).  Or we just compute the
+average run length of pixels of the same color in each row and column.
