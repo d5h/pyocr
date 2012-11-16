@@ -18,6 +18,8 @@ def iround(x):
 if __name__ == '__main__':
     import cv
     import sys
+    threshold_lower = float(sys.argv[2])
+    threshold_upper = float(sys.argv[3])
     mat = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
     from common.bin import binary
     mat = binary(mat)
@@ -25,9 +27,12 @@ if __name__ == '__main__':
     #    print m[0,0], r
     from entropy import entropy
     data = []
-    def print_entropy(m, r):
+    def filter_entropy(m, r):
         data.append(entropy(m))
         print "%s: %s" % (r, data[-1])
-    grid_map(mat, 10, 10, print_entropy)
-    from common.show import hist
-    hist(data)
+        if not (threshold_lower <= data[-1] <= threshold_upper):
+            cv.Set(m, 0)
+    grid_map(mat, 8, 8, filter_entropy)
+    from common.show import hist, show
+    #hist(data)
+    show(mat)

@@ -3,32 +3,24 @@ returns a sub image with as little noise as possible, however there
 may be some non-letter objects in the image, such as bolts, arrows,
 etc.
 
-One idea to do this is to first break the image into a grid and look
-at each square in the grid.  Define a set of colors, which are
-represented as vectors in [0,255]^3.  For each pixel in a square, map
-its color to the closest color vector in our set, and count how many
-pixels map to each color.  This basically constructs a histogram, but
-avoid peak-detection on a normal histogram.  The bins should map to
-colors which would normally be used for text and background, such as
-white, black, red, etc.  We expect the squares covering the sign to
-have the majority of their pixels (we can choose the percentage based
-on empirical data) in three bins, and adjacent squares covering the
-sign to use the same bins, etc.  We can then stitch together the
-rectangle bounding the sign with this info.  However, I don't really
-like the idea of relying on color to find the sign.  Intuitively, we
-should be able to find the sign in a binary image.
+The grid + entropy by itself seems to be a pretty poor method after
+all.  I used a passband of [0.02,0.12] empirically with an 8x8 grid on
+binarized images, and it did an ok job of filtering through the sign,
+but also let through a lot of noise.  The grid is also very course.
+We could refine it, but I think working with a binary image, it's just
+too hard to filter text on a background from other orderly looking
+objects, such as powerlines against a sky.  The grid method might be
+useful as a single classifier used with others, but I think we can
+probably do without it by finding a better method.
 
-I like the idea of the grid though.  I think a better metric than
-color diversity is some measure of entropy in the squares of the grid.
-We could binarize the image first, then assign some "signal to noise"
-metric to regions.  This could be defined as the main frequency given
-by a FFT (high is noise, low is signal).  Or we just compute the
-average run length of pixels of the same color in each row and column.
+The method I used in a previous project of using edge detection +
+contours and looking for contours with straight sides and rectangular
+shape worked reasonably well.
 
-Looking at histograms of some signs, it looks like entropy could be a
-decent measure for finding signs, perhaps with a passband of some
-value slightly greater than zero and less than 0.18.  Even that may be
-high.  It looks like most entropy for images with close ups on signs
-are about 0.05.  We should choose the grid size based on the image
-size though, to normalize, and need to play around some more to choose
-a working value.
+Or perhaps we could continue to use entropy, but instead of looking at
+multiple squares in a grid, try to find one rectangle that has the
+optimal value of entropy for a sign.  We could start with the entire
+image rectangle and reduce it one side at a time by whichever row or
+column removal brings us closest to the ideal entropy.  If this method
+doesn't work, we could still use the constricting box with other
+feature metrics.
