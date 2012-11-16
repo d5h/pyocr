@@ -17,10 +17,6 @@ The method I used in a previous project of using edge detection +
 contours and looking for contours with straight sides and rectangular
 shape worked reasonably well.
 
-Or perhaps we could continue to use entropy, but instead of looking at
-multiple squares in a grid, try to find one rectangle that has the
-optimal value of entropy for a sign.  We could start with the entire
-image rectangle and reduce it one side at a time by whichever row or
-column removal brings us closest to the ideal entropy.  If this method
-doesn't work, we could still use the constricting box with other
-feature metrics.
+Using the tightening rectangle with entropy is terrible and extremely
+slow (although it doesn't have to be if we can memoize the scoring
+function on subsections).
