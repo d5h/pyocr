@@ -19,8 +19,11 @@ def corners(m, template_width=30, template_height=40,
         showimg(template)
 
     res_top_left = cv.CreateMat(m.rows - template.rows + 1, m.cols - template.cols + 1, cv.CV_32F)
-    cv.MatchTemplate(m, template, res_top_left, cv.CV_TM_SQDIFF)
+    cv.MatchTemplate(m, template, res_top_left, cv.CV_TM_SQDIFF_NORMED)
+    print res_top_left.type
+    print cv.MinMaxLoc(res_top_left)
     _, _, (mx, my), _ = cv.MinMaxLoc(res_top_left)
+    #_, _, _, (mx, my) = cv.MinMaxLoc(res_top_left)
     if show:
         # kludge
         cv.Copy(template, m[my:my + template.rows,mx:mx + template.cols])
