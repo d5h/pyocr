@@ -3,16 +3,6 @@ returns a sub image with as little noise as possible, however there
 may be some non-letter objects in the image, such as bolts, arrows,
 etc.
 
-The grid + entropy by itself seems to be a pretty poor method after
-all.  I used a passband of [0.02,0.12] empirically with an 8x8 grid on
-binarized images, and it did an ok job of filtering through the sign,
-but also let through a lot of noise.  The grid is also very course.
-We could refine it, but I think working with a binary image, it's just
-too hard to filter text on a background from other orderly looking
-objects, such as powerlines against a sky.  The grid method might be
-useful as a single classifier used with others, but I think we can
-probably do without it by finding a better method.
-
 The method I used in a previous project of using edge detection +
 contours and looking for contours with straight sides and rectangular
 shape worked reasonably well.
