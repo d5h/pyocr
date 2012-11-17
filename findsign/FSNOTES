@@ -16,7 +16,3 @@ probably do without it by finding a better method.
 The method I used in a previous project of using edge detection +
 contours and looking for contours with straight sides and rectangular
 shape worked reasonably well.
-
-Using the tightening rectangle with entropy is terrible and extremely
-slow (although it doesn't have to be if we can memoize the scoring
-function on subsections).
