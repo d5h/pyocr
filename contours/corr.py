@@ -7,7 +7,7 @@ from scipy.interpolate import interp1d
 from scipy.signal import fftconvolve
 from scipy.stats.stats import pearsonr
 
-from cont import cont_angles, cont_deriv
+from cont import cont_angles
 
 
 def image_corr(i, j):
@@ -20,12 +20,8 @@ def cont_corr(ai, aj, show=False):
         aj = scale_size(aj, ai)
     elif len(aj) < len(ai):
         ai = scale_size(ai, aj)
-    #di = cont_deriv(ai)
-    #dj = cont_deriv(aj)
-    #plot(ai, 'r', aj, 'b')
     k = find_shift(ai, aj)
     ai = phase_shift(ai, k)
-    #di = phase_shift(di, k)
     if show:
         from show import plot
         plot(ai, 'r', aj, 'b')

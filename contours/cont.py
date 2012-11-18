@@ -20,21 +20,20 @@ freeman_to_vector = {
     7: np.array([-sqrt_half, sqrt_half])
     }
 
+good_freeman_filter = gaussian(11, 3)
+
+def freeman_codes(image, flat=False):
+    retr = cv.CV_RETR_LIST if flat else cv.CV_RETR_TREE
+    return cv.FindContours(image, cv.CreateMemStorage(), retr, cv.CV_CHAIN_CODE)
+
+def contour_points(image, flat=False):
+    # Returns the points associated with the Freeman codes.
+    retr = cv.CV_RETR_LIST if flat else cv.CV_RETR_TREE
+    return cv.FindContours(image, cv.CreateMemStorage(), retr)
+
 def cont_angles(image):
-    seq = cv.FindContours(image, cv.CreateMemStorage(), cv.CV_RETR_TREE, cv.CV_CHAIN_CODE)
-    angles = freeman_to_angles(seq, gaussian(11, 3))
-    diff = [angle_deriv(angles, n) for n in range(len(angles))]
-    del seq   # associated storage is also released
-    return angles
-
-def show_cont_change(image):
-    angles = cont_angles(image)
-    diff = cont_deriv(angles)
-    plot(angles)
-    plot(diff)
-
-def cont_deriv(angles):
-    return [angle_deriv(angles, n) for n in range(len(angles))]
+    seq = freeman_codes(image)
+    return freeman_to_angles(seq, gaussian(11, 3))
 
 def freeman_to_angles(fr, conv_window=None):
     vectors = [freeman_to_vector[f] for f in fr]
@@ -46,22 +45,6 @@ def freeman_to_angles(fr, conv_window=None):
 def angle(x, y):
     """Signed angle using perp dot product over dot product"""
     return np.degrees(np.arctan2(x[0] * y[1] - x[1] * y[0], x[0] * y[0] + x[1] * y[1]))
-
-def angle_diff(a, b):
-    """Angle difference with abs value less than 180"""
-    d = b - a
-    if 180 < d:
-        d -= 360
-    elif d < -180:
-        d += 360
-    return d
-
-def angle_deriv(angles, i):
-    """Five-point stencil"""
-    y1 = angle_diff(angles[i], angles[i - 1])
-    y2 = angle_diff(angles[i - 1], angles[i - 2])
-    y3 = angle_diff(angles[(i + 1) % len(angles)], angles[i])
-    return (7 * y1 - y2 - y3) / 6
 
 def convolve_window_wrap(a, w):
     """Might normalize w"""
