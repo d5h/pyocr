@@ -52,7 +52,7 @@ def border(m, show=False):
         if w < 20 or h < 40:
             continue
         aspect_ratio = float(h) / w
-        if not (0.5 <= aspect_ratio <= 2):
+        if not (0.5 <= aspect_ratio <= 4):
             continue
         print box, aspect_ratio
         a = cont.freeman_to_angles(chain, cont.good_freeman_filter)
@@ -63,7 +63,7 @@ def border(m, show=False):
         # Need to look at v_next too?
         chain = chain.h_next()
         points = points.h_next()
-    boxes = classifications.rankings(limit=10)
+    boxes = classifications.rankings(limit=20)
     if show:
         for box in boxes:
             cv.Rectangle(m, box[0], box[1], 128, thickness=2)
