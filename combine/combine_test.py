@@ -11,11 +11,22 @@ from common.score import Classifications, score_files
 
 class CombinedClassifications(Classifications):
 
-    def __init__(self, certainties):
-        self._certainties = certainties
+    def __init__(self):
+        self._certainties = defaultdict(lambda: 1.0)
 
-    def certainty(self, char):
-        return self._certainties[char]
+    def add(self, sub_cls):
+        sub_rankings = sub_cls.rankings()
+        max_cert = float(sub_cls.certainty(sub_rankings[0]))
+        min_cert = sub_cls.certainty(sub_rankings[-1])
+        if max_cert != min_cert:
+            normalized_certainties = [(sub_cls.certainty(obj) - min_cert) / (max_cert - min_cert) for obj in sub_rankings]
+        else:
+            normalized_certainties = [1] * len(sub_rankings)
+        for n, obj in enumerate(sub_rankings):
+            self._certainties[obj] *= normalized_certainties[n]
+
+    def certainty(self, obj):
+        return self._certainties[obj]
 
     def rankings(self, limit=None, ignore_case=True):
         r = sorted(self._certainties, key=self.certainty, reverse=True)
@@ -27,17 +38,11 @@ class Combiner(object):
         self._tests = tests
 
     def test(self, image, char=None):
-        certainties = defaultdict(lambda: 1.0)
+        classifications = CombinedClassifications()
         for test in self._tests:
-            sub_cls = test(image, char=char)
-            sub_rankings = sub_cls.rankings()
-            max_cert = float(sub_cls.certainty(sub_rankings[0]))
-            min_cert = sub_cls.certainty(sub_rankings[-1])
-            normalized_certainties = [(sub_cls.certainty(char) - min_cert) / (max_cert - min_cert) for char in sub_rankings]
-            for n, char in enumerate(sub_rankings):
-                certainties[char] *= normalized_certainties[n]
+            classifications.add(test(image, char=char))
 
-        return CombinedClassifications(certainties)
+        return classifications
 
 
 if __name__ == '__main__':

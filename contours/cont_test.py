@@ -20,18 +20,21 @@ class ContClassifications(Classifications):
         self.max_error = 0.0
         self.min_error = float('inf')
 
-    def add(self, char, correlation, error):
-        self.correlations[char] = correlation
-        self.errors[char] = error
+    def add(self, obj, correlation, error):
+        self.correlations[obj] = correlation
+        self.errors[obj] = error
         self.sum_correlations += abs(correlation)
         self.max_error = max(self.max_error, error)
         self.min_error = min(error, self.min_error)
 
-    def certainty(self, char):
-        return abs(self.correlations[char]) * self.error_factor(char) / self.sum_correlations
+    def certainty(self, obj):
+        return abs(self.correlations[obj]) * self.error_factor(obj) / self.sum_correlations
 
-    def error_factor(self, char):
-        return 1 - float(self.errors[char] - self.min_error) / (self.max_error - self.min_error)
+    def error_factor(self, obj):
+        if self.max_error == self.min_error:
+            return 1
+        else:
+            return 1 - float(self.errors[obj] - self.min_error) / (self.max_error - self.min_error)
 
     def rankings(self, limit=None, ignore_case=True):
         r = sorted(self.correlations, key=self.certainty, reverse=True)

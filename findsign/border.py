@@ -2,10 +2,14 @@
 
 import cv
 
-from contours import cont
-from contours.corr import cont_corr
+from combine.combine_test import CombinedClassifications
+from common.bin import binary
 from common.score import Classifications
+from contours import cont
+from contours.cont_test import ContClassifications
+from contours.corr import cont_corr
 from edge import edges
+from entropy import entropy
 from common.show import show as showimg
 
 
@@ -33,8 +37,14 @@ def iterseq(s):
         yield s
         s = s.h_next()
 
-def border(m, show=False):
-    classifications = BoxClassifications()
+def show_classifications(classifications, m, limit=10):
+    for box in classifications.rankings(limit=limit):
+        print box
+        cv.Rectangle(m, box[0], box[1], 128, thickness=2)
+        showimg(m)
+
+def find_boxes(m, show=False):
+    classifications = ContClassifications()
     e = edges(m, show=show)
     # FindContours modifies its source
     e1 = cv.CloneMat(e)
@@ -58,19 +68,33 @@ def border(m, show=False):
         a = cont.freeman_to_angles(chain, cont.good_freeman_filter)
         if not a:
             continue
-        corr = cont_corr(a, angles)
-        classifications.add(box, corr)
-        # Need to look at v_next too?
+        corr, error = cont_corr(a, angles)
+        classifications.add(box, corr, error)
         chain = chain.h_next()
         points = points.h_next()
-    boxes = classifications.rankings(limit=20)
     if show:
-        for box in boxes:
-            cv.Rectangle(m, box[0], box[1], 128, thickness=2)
-            showimg(m)
-    return boxes[0]
+        show_classifications(classifications, m)
+    return classifications
+
+def entropy_classifications(boxes, m, ideal=0.083):
+    classifications = BoxClassifications()
+    binimg = binary(m)
+    for b in boxes:
+        reg = binimg[b[0][1]:b[1][1], b[0][0]:b[1][0]]
+        e = entropy(reg)
+        print b, e
+        classifications.add(b, 1 - abs(e - ideal))
+    return classifications
+
+def find_best_boxes(m):
+    cc = CombinedClassifications()
+    cc.add(find_boxes(m))
+    boxes = cc.rankings()
+    cc.add(entropy_classifications(boxes, m))
+    return cc
 
 if __name__ == '__main__':
     import sys
     i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
-    border(i, True)
+    c = find_best_boxes(i)
+    show_classifications(c, i, limit=5)
