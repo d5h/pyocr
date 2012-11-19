@@ -16,6 +16,8 @@ def image_corr(i, j):
     return cont_corr(ai, aj)
 
 def cont_corr(ai, aj, show=False):
+    if len(ai) == 0 or len(aj) == 0:
+        return 0, float('inf')
     if len(ai) < len(aj):
         aj = scale_size(aj, ai)
     elif len(aj) < len(ai):

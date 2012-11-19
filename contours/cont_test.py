@@ -28,6 +28,8 @@ class ContClassifications(Classifications):
         self.min_error = min(error, self.min_error)
 
     def certainty(self, obj):
+        if self.sum_correlations == 0:
+            return 0
         return abs(self.correlations[obj]) * self.error_factor(obj) / self.sum_correlations
 
     def error_factor(self, obj):
@@ -45,9 +47,9 @@ def test(image, char=None):
     image = adjust_aspect(image, binarize=True)
     cont = cont_angles(image)
     for c, a in cont_table.angles.items():
-        print c
+        #print c
         corr, error = cont_corr(cont, a)#, show=(c in 'PoDBi'))
-        print ("corr(%s, %s) = %.3f; error = %.1f" % (char, c, corr, error))
+        #print ("corr(%s, %s) = %.3f; error = %.1f" % (char, c, corr, error))
         classifications.add(c, corr, error)
 
     return classifications
