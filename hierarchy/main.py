@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import sys
+
 import cv
 
 from combine.combine_test import CombinedClassifications, Combiner
@@ -30,13 +32,19 @@ class ImgObj(object):
         #cv.DrawContours(mask, freeman_code, external_color=255, hole_color=255,
         #                max_level=0, thickness=cv.CV_FILLED, offset=(-x1, -y1))
         #showimg(mask)
+        contour_length = cv.ArcLength(contour_points)
+        contour_area = cv.ContourArea(contour_points)
+        box_perim = 2.0 * (x2 - x1 + y2 - y1)
         mask = cv.CreateMat(y2 - y1 + 2, x2 - x1 + 2, cv.CV_8U)
         cv.Set(mask, 0)
         cv.DrawContours(mask, freeman_code, external_color=255, hole_color=0,
                         max_level=-2, thickness=cv.CV_FILLED, offset=(1 - x1, 1 - y1))
         self.char_cls = hierarchy.char_test(mask)
+        print "Len: %f, Area: %f, Len^2/Area: %f, BB/Len: %f" % (
+            contour_length, contour_area, contour_length**2 / contour_area,  box_perim / contour_length
+            )
         print self.char_cls.rankings(limit=5)
-        showimg(mask)
+        print >>sys.stderr, "%s,%f,%f\n" % (chr(showimg(mask)), contour_length**2 / contour_area,  box_perim / contour_length)
 
 class Hierarchy(object):
 
@@ -101,6 +109,5 @@ def iterseq(s):
         s = s.h_next()
 
 if __name__ == '__main__':
-    import sys
     i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
     h = Hierarchy(i)

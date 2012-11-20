@@ -25,7 +25,7 @@ def hist(*args, **kwargs):
 
 def show(img):
     cv.ShowImage(window, img)
-    cv.WaitKey()
+    return cv.WaitKey()
 
 
 if __name__ == '__main__':

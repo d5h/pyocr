@@ -24,6 +24,28 @@ we may be able to detect drastic misclassifications.  E.g., if we the
 top rankings aren't in a known cluster, it indicates the guess is a
 bad one.
 
+One thing I've learned from this is that it's easier to classify
+signals than to separate signals from noise.  =\
+
+We should look for cheaper features.  The algorithms used here are
+pretty slow, and we should be able to learn some cheap features that
+separate the data well.
+
+Hierarchy
+=========
+
+Using edge-detection contours to separate characters from noise is
+difficult.  I tried features including the square of contour length
+divided by the contour area (so that it hopefully scales constantly),
+and bounding box perimeter divided by contour length.  The latter was
+a better indicator, but there is a lot of overlap in the signal and
+noise.  I think this is partially because the contours OpenCV gives me
+are too sensitive and sometimes contain a lot of pointless looping so
+the length is longer than it should be.  Hence perhaps we should look
+into using contours from the binary image, perhaps with erosion
+applied first to eliminate some noise, or perhaps we shouldn't use
+contours at all and look for a totally different method.
+
 Combine
 =======
 
