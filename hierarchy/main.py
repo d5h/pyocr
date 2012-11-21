@@ -11,7 +11,6 @@ from common.show import show as showimg
 from contours import cont
 from contours.cont_test import ContClassifications, test as cont_test
 from contours.corr import cont_corr
-from edge import edges
 from sign_angles import sign_angles
 from templates.mask_test import test as mask_test
 
@@ -26,39 +25,26 @@ class ImgObj(object):
         self.nested = []
 
         x1, y1, x2, y2 = bounding_box
-        #reg = self.hierarchy.img[y1:y2, x1:x2]
-        #mask = cv.CreateMat(y2 - y1, x2 - x1, cv.CV_8U)
-        #cv.Set(mask, 0)
-        #cv.DrawContours(mask, freeman_code, external_color=255, hole_color=255,
-        #                max_level=0, thickness=cv.CV_FILLED, offset=(-x1, -y1))
-        #showimg(mask)
-        contour_length = cv.ArcLength(contour_points)
-        contour_area = cv.ContourArea(contour_points)
-        box_perim = 2.0 * (x2 - x1 + y2 - y1)
         mask = cv.CreateMat(y2 - y1 + 2, x2 - x1 + 2, cv.CV_8U)
         cv.Set(mask, 0)
-        cv.DrawContours(mask, freeman_code, external_color=255, hole_color=0,
-                        max_level=-2, thickness=cv.CV_FILLED, offset=(1 - x1, 1 - y1))
+        cv.Copy(self.hierarchy.binary_img[y1:y2, x1:x2], mask[1:-1,1:-1])
         self.char_cls = hierarchy.char_test(mask)
-        print "Len: %f, Area: %f, Len^2/Area: %f, BB/Len: %f" % (
-            contour_length, contour_area, contour_length**2 / contour_area,  box_perim / contour_length
-            )
         print self.char_cls.rankings(limit=5)
-        print >>sys.stderr, "%s,%f,%f\n" % (chr(showimg(mask)), contour_length**2 / contour_area,  box_perim / contour_length)
+        showimg(mask)
 
 class Hierarchy(object):
 
     def __init__(self, img):
         self.objs = []
         self.img = img
-        self.binary_img = binary(img)
+        self.binary_img = binary(img, invert=True)
         self.char_test = Combiner([cont_test, mask_test]).test
-        e = edges(img)
+        b = self.binary_img
         # FindContours modifies the image
-        e1 = cv.CloneMat(e)
-        e2 = cv.CloneMat(e)
-        chain_seq = cont.freeman_codes(e1)
-        points_seq = cont.contour_points(e2)
+        b1 = cv.CloneMat(b)
+        b2 = cv.CloneMat(b)
+        chain_seq = cont.freeman_codes(b1)
+        points_seq = cont.contour_points(b2)
         for chain, points in zip(iterseq(chain_seq), iterseq(points_seq)):
             self.maybe_add_contour(points, chain)
 

@@ -34,17 +34,17 @@ separate the data well.
 Hierarchy
 =========
 
-Using edge-detection contours to separate characters from noise is
-difficult.  I tried features including the square of contour length
-divided by the contour area (so that it hopefully scales constantly),
-and bounding box perimeter divided by contour length.  The latter was
-a better indicator, but there is a lot of overlap in the signal and
-noise.  I think this is partially because the contours OpenCV gives me
-are too sensitive and sometimes contain a lot of pointless looping so
-the length is longer than it should be.  Hence perhaps we should look
-into using contours from the binary image, perhaps with erosion
-applied first to eliminate some noise, or perhaps we shouldn't use
-contours at all and look for a totally different method.
+Death to edge detection!  Long live binarization!  The problem with
+finding contours on an edge detected image is that you get both the
+inside and the outside of the object, because a contour matches both
+sides of the edge.  The is unnecessary and leads to poor results.  It
+also seems like you get a lot more noise because there are many more
+contours.  Binarization simplifies the image whereas edge detection
+results in something more complicated and harder to work with.  We
+need to be sure the letters are white, as contours only stick to white
+things.  Converting the image to binary properly so that we can see
+characters on either a light or dark background may present some
+challenges, but it's working well for the most part now.
 
 Combine
 =======

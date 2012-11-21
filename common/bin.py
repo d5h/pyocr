@@ -3,11 +3,12 @@
 import cv
 
 
-def binary(img):
+def binary(img, invert=False):
+    thresh_type = cv.CV_THRESH_BINARY if not invert else cv.CV_THRESH_BINARY_INV
     out = cv.CreateMat(img.height, img.width, cv.CV_8U)
     # Use adaptive thresholding with a large blocksize so that dark
     # text on a light background remain dark.
-    cv.AdaptiveThreshold(img, out, 255, blockSize=25)
+    cv.AdaptiveThreshold(img, out, 255, blockSize=25, thresholdType=thresh_type)
     return out
 
 if __name__ == '__main__':
