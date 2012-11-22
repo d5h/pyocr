@@ -38,4 +38,4 @@ def find_font(name):
 
 if __name__ == '__main__':
     import sys
-    main('FreeSansBold', string.ascii_letters)
+    main('FreeSansBold', string.ascii_letters + string.digits + ':-,.!')

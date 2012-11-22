@@ -116,8 +116,9 @@ class Hierarchy(object):
 
     def output(self):
         for obj in self.objs:
-            c = obj.char_cls.rankings(limit=1)[0]
-            print c, obj.char_score, self.obj_classifier.certainty(obj)
+            if 0.5 < self.obj_classifier.certainty(obj):
+                c = obj.char_cls.rankings(limit=1)[0]
+                print c, obj.char_score, self.obj_classifier.certainty(obj)
 
 class ImgObjClassifications(Classifications):
 
