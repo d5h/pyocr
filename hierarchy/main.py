@@ -3,6 +3,7 @@
 import sys
 
 import cv
+import numpy as np
 
 from combine.combine_test import CombinedClassifications, Combiner
 from common.bin import binary
@@ -29,8 +30,6 @@ class ImgObj(object):
         cv.Set(mask, 0)
         cv.Copy(self.hierarchy.binary_img[y1:y2, x1:x2], mask[1:-1,1:-1])
         self.char_cls = hierarchy.char_test(mask)
-        print self.char_cls.rankings(limit=5)
-        showimg(mask)
 
 class Hierarchy(object):
 
@@ -47,6 +46,8 @@ class Hierarchy(object):
         points_seq = cont.contour_points(b2)
         for chain, points in zip(iterseq(chain_seq), iterseq(points_seq)):
             self.maybe_add_contour(points, chain)
+
+        self.sort_objects()
 
     def maybe_add_contour(self, points, chain, parent=None):
         if len(points) < 4 or len(chain) < 15:
@@ -74,6 +75,29 @@ class Hierarchy(object):
         if points_child is not None:
             self.maybe_add_contour(points_child, chain.v_next(), obj)
 
+    def sort_objects(self):
+        # Snap y coordinate to adjust for tilted / uneven characters.
+        # We use the median height of objects to determine the snap
+        # distance.  Hopefully characters fall in the median size
+        # range.
+        heights = [c.bounding_box[3] - c.bounding_box[1] for c in self.objs]
+        med_height = np.median(heights)
+        snap = med_height / 2.0
+
+        def comparator(a, b):
+            ax = a.bounding_box[0]
+            ay = int(round((a.bounding_box[1] + a.bounding_box[3]) / snap))
+            bx = b.bounding_box[0]
+            by = int(round((b.bounding_box[1] + b.bounding_box[3]) / snap))
+            return cmp(ay, by) or cmp(ax, bx)
+
+        self.objs.sort(cmp=comparator)
+
+    def output(self):
+        for obj in self.objs:
+            c = obj.char_cls.rankings(limit=1)[0]
+            print c
+
 class ImgObjClassifications(Classifications):
 
     def __init__(self):
@@ -97,3 +121,4 @@ def iterseq(s):
 if __name__ == '__main__':
     i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
     h = Hierarchy(i)
+    h.output()
