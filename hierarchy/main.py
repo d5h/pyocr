@@ -32,9 +32,6 @@ class ImgObj(object):
         self.char_cls = hierarchy.char_test(mask)
         self.char_score = self.char_cls.certainty(self.char_cls.rankings(limit=1)[0])
 
-    def compute_char_scores(self):
-        self.char_y_score = char_y_test(self, self.hierarchy)
-
 class Hierarchy(object):
 
     def __init__(self, img):
@@ -51,8 +48,7 @@ class Hierarchy(object):
         for chain, points in zip(iterseq(chain_seq), iterseq(points_seq)):
             self.maybe_add_contour(points, chain)
 
-        for obj in self.objs:
-            obj.compute_char_scores()
+        self.compute_char_scores()
         self.sort_objects()
 
     def maybe_add_contour(self, points, chain, parent=None):
@@ -81,6 +77,25 @@ class Hierarchy(object):
         if points_child is not None:
             self.maybe_add_contour(points_child, chain.v_next(), obj)
 
+    def compute_char_scores(self):
+        self.obj_classifier = CombinedClassifications()
+        cls = ImgObjClassifications({obj: obj.char_score for obj in self.objs})
+        self.obj_classifier.add(cls)
+        cls = ImgObjClassifications({obj: self.char_y_score(obj) for obj in self.objs})
+        self.obj_classifier.add(cls)
+
+    def char_y_score(self, obj):
+        height = self.img.rows
+        m = height * height
+        score = 0.0
+        y = (obj.bounding_box[1] + obj.bounding_box[3]) / 2.0
+        for other in self.objs:
+            if obj is other:
+                continue
+            other_y = (other.bounding_box[1] + other.bounding_box[3]) / 2.0
+            score += (m - abs(y - other_y) ** 2) * self.obj_classifier.certainty(other)
+        return score / (m * (len(self.objs) - 1))
+
     def sort_objects(self):
         # Snap y coordinate to adjust for tilted / uneven characters.
         # We use the median height of objects to determine the snap
@@ -102,12 +117,15 @@ class Hierarchy(object):
     def output(self):
         for obj in self.objs:
             c = obj.char_cls.rankings(limit=1)[0]
-            print c, obj.char_score, obj.char_y_score
+            print c, obj.char_score, self.obj_classifier.certainty(obj)
 
 class ImgObjClassifications(Classifications):
 
-    def __init__(self):
-        self._objs = {}
+    def __init__(self, init=None):
+        if init:
+            self._objs = init
+        else:
+            self._objs = {}
 
     def add(self, obj, score):
         self._objs[obj] = score
@@ -118,18 +136,6 @@ class ImgObjClassifications(Classifications):
     def rankings(self, limit=None, ignore_case=False):
         r = sorted(self._objs, key=self.certainty, reverse=True)
         return self.filter_rankings(r, limit, ignore_case=False)
-
-def char_y_test(obj, hierarchy):
-    height = hierarchy.img.rows
-    m = height * height
-    score = 0.0
-    y = (obj.bounding_box[1] + obj.bounding_box[3]) / 2.0
-    for other in hierarchy.objs:
-        if obj is other:
-            continue
-        other_y = (other.bounding_box[1] + other.bounding_box[3]) / 2.0
-        score += (m - abs(y - other_y) ** 2) * other.char_score
-    return score / (m * (len(hierarchy.objs) - 1))
 
 def iterseq(s):
     while s is not None:
