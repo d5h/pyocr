@@ -30,7 +30,17 @@ class ImgObj(object):
         cv.Set(mask, 0)
         cv.Copy(self.hierarchy.binary_img[y1:y2, x1:x2], mask[1:-1,1:-1])
         self.char_cls = hierarchy.char_test(mask)
-        self.char_score = self.char_cls.certainty(self.char_cls.rankings(limit=1)[0])
+        self.char = self.char_cls.rankings(limit=1)[0]
+        self.char_score = self.char_cls.certainty(self.char)
+
+class Word(object):
+
+    def __init__(self, pos):
+        self.chars = []
+        self.pos = pos
+
+    def string(self):
+        return ''.join([c.char for c in self.chars])
 
 class Hierarchy(object):
 
@@ -49,7 +59,7 @@ class Hierarchy(object):
             self.maybe_add_contour(points, chain)
 
         self.compute_char_scores()
-        self.sort_objects()
+        self.group_words()
 
     def maybe_add_contour(self, points, chain, parent=None):
         if len(points) < 4 or len(chain) < 15:
@@ -96,29 +106,47 @@ class Hierarchy(object):
             score += (m - abs(y - other_y) ** 2) * self.obj_classifier.certainty(other)
         return score / (m * (len(self.objs) - 1))
 
-    def sort_objects(self):
-        # Snap y coordinate to adjust for tilted / uneven characters.
-        # We use the median height of objects to determine the snap
-        # distance.  Hopefully characters fall in the median size
-        # range.
-        heights = [c.bounding_box[3] - c.bounding_box[1] for c in self.objs]
-        med_height = np.median(heights)
-        snap = med_height / 2.0
-
-        def comparator(a, b):
-            ax = a.bounding_box[0]
-            ay = int(round((a.bounding_box[1] + a.bounding_box[3]) / snap))
-            bx = b.bounding_box[0]
-            by = int(round((b.bounding_box[1] + b.bounding_box[3]) / snap))
-            return cmp(ay, by) or cmp(ax, bx)
-
-        self.objs.sort(cmp=comparator)
+    def group_words(self, score_threshold=0.5):
+        objs = sorted(self.objs, key=lambda c: c.bounding_box[0])
+        objs = [b for b in objs if score_threshold < self.obj_classifier.certainty(b)]
+        words = []
+        word = None
+        while objs:
+            if word is None:
+                c = objs.pop(0)  # would be more efficient to do this backwards
+                h = c.bounding_box[3] - c.bounding_box[1]
+                y = (c.bounding_box[1] + c.bounding_box[3]) / 2.0
+                pos = (c.bounding_box[1], 1)
+                word = Word(pos=pos)
+                word.chars.append(c)
+            for n, d in enumerate(objs):
+                ylim = max(h, d.bounding_box[3] - d.bounding_box[1]) / 2.0
+                if abs((d.bounding_box[1] + d.bounding_box[3]) / 2.0 - y) < ylim:
+                    if (c.bounding_box[2] - c.bounding_box[0] + d.bounding_box[2] - d.bounding_box[0]) / 4.0 \
+                           < (d.bounding_box[0] - c.bounding_box[2]):
+                        words.append(word)
+                        pos = (pos[0], pos[1] + 1)
+                        word = Word(pos)
+                    c = d
+                    h = c.bounding_box[3] - c.bounding_box[1]
+                    y = (c.bounding_box[1] + c.bounding_box[3]) / 2.0
+                    word.chars.append(c)
+                    del objs[n]
+                    break
+            else:
+                words.append(word)
+                word = None
+        if word:
+            words.append(word)
+        self.words = sorted(words, key=lambda w: w.pos)
 
     def output(self):
-        for obj in self.objs:
-            if 0.5 < self.obj_classifier.certainty(obj):
-                c = obj.char_cls.rankings(limit=1)[0]
-                print c, obj.char_score, self.obj_classifier.certainty(obj)
+        line = self.words[0].pos[0]
+        for w in self.words:
+            if w.pos[0] != line:
+                line = w.pos[0]
+                print
+            print w.string(),
 
 class ImgObjClassifications(Classifications):
 

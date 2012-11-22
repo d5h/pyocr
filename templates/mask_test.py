@@ -34,7 +34,6 @@ def test(image, char=None):
     m1 = make_mask(image, width=mask_table.width, height=mask_table.height)
     for c, m2 in mask_table.masks.items():
         s = cmp_masks(m1, m2)
-        print ("sum(%s, %s) = %.3f" % (char, c, s))
         classifications.add(c, s)
 
     return classifications

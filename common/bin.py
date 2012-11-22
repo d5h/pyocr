@@ -17,6 +17,6 @@ if __name__ == '__main__':
 
     for a in sys.argv[1:]:
         i = cv.LoadImage(a, cv.CV_LOAD_IMAGE_GRAYSCALE)
-        i = binary(i)
+        i = binary(i, invert=True)
         show(i)
         #cv.SaveImage("output.tif", i)
