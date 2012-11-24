@@ -118,5 +118,5 @@ if __name__ == '__main__':
     i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
     coms = connected_components(i)
     print len(coms)
-    for c in sorted(coms, key=lambda c: c.mask.rows * c.mask.cols, reverse=True)[:5]:
+    for c in sorted(coms, key=lambda c: c.mask.rows * c.mask.cols, reverse=True)[:15]:
         showimg(c.mask)

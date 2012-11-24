@@ -52,7 +52,7 @@ class Hierarchy(object):
         return (#0.5 < com.intensity and
                 10 < com.mask.rows and
                 5 < com.mask.cols and
-                0.5 <= float(com.mask.rows) / com.mask.cols <= 4)
+                0.5 <= float(com.mask.rows) / com.mask.cols <= 5.5)
 
     def compute_char_scores(self):
         self.obj_classifier = CombinedClassifications()
