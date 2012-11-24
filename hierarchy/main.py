@@ -9,27 +9,21 @@ from combine.combine_test import CombinedClassifications, Combiner
 from common.bin import binary
 from common.score import Classifications
 from common.show import show as showimg
-from contours import cont
+from common.concom import connected_components
 from contours.cont_test import ContClassifications, test as cont_test
-from contours.corr import cont_corr
-from sign_angles import sign_angles
 from templates.mask_test import test as mask_test
 
 
 class ImgObj(object):
 
-    def __init__(self, contour_points, freeman_code, hierarchy, bounding_box):
+    def __init__(self, component, hierarchy):
         self.hierarchy = hierarchy
-        self.contour_points = contour_points
-        self.freeman_code = freeman_code
-        self.bounding_box = bounding_box
-        self.nested = []
-
-        x1, y1, x2, y2 = bounding_box
-        mask = cv.CreateMat(y2 - y1 + 2, x2 - x1 + 2, cv.CV_8U)
-        cv.Set(mask, 0)
-        cv.Copy(self.hierarchy.binary_img[y1:y2, x1:x2], mask[1:-1,1:-1])
-        self.char_cls = hierarchy.char_test(mask)
+        x1 = component.offset[0]
+        y1 = component.offset[1]
+        x2 = x1 + component.mask.cols + 1
+        y2 = y1 + component.mask.rows + 1
+        self.bounding_box = x1, y1, x2, y2
+        self.char_cls = hierarchy.char_test(component.border_mask)
         self.char = self.char_cls.rankings(limit=1)[0]
         self.char_score = self.char_cls.certainty(self.char)
 
@@ -45,47 +39,20 @@ class Word(object):
 class Hierarchy(object):
 
     def __init__(self, img):
-        self.objs = []
         self.img = img
         self.binary_img = binary(img, invert=True)
         self.char_test = Combiner([cont_test, mask_test]).test
-        b = self.binary_img
-        # FindContours modifies the image
-        b1 = cv.CloneMat(b)
-        b2 = cv.CloneMat(b)
-        chain_seq = cont.freeman_codes(b1)
-        points_seq = cont.contour_points(b2)
-        for chain, points in zip(iterseq(chain_seq), iterseq(points_seq)):
-            self.maybe_add_contour(points, chain)
-
+        self.objs = [
+            ImgObj(x, self) for x in connected_components(self.binary_img) if self.good_component(x)
+            ]
         self.compute_char_scores()
         self.group_words()
 
-    def maybe_add_contour(self, points, chain, parent=None):
-        if len(points) < 4 or len(chain) < 15:
-            return
-        xs = [p[0] for p in points]
-        ys = [p[1] for p in points]
-        xmin, ymin, xmax, ymax = min(xs), min(ys), max(xs), max(ys)
-        w = xmax - xmin
-        h = ymax - ymin
-        if w < 5 or h < 10:
-            return
-        aspect_ratio = float(h) / w
-        if not (0.5 <= aspect_ratio <= 4):
-            return
-
-        obj = ImgObj(contour_points=points, freeman_code=chain, hierarchy=self,
-                     bounding_box=(xmin, ymin, xmax, ymax))
-        self.objs.append(obj)
-        if parent:
-            parent.nested.append(obj)
-
-        # Note that we don't check nested objects of those that are
-        # rejected by maybe_add_contour
-        points_child = points.v_next()
-        if points_child is not None:
-            self.maybe_add_contour(points_child, chain.v_next(), obj)
+    def good_component(self, com):
+        return (#0.5 < com.intensity and
+                10 < com.mask.rows and
+                5 < com.mask.cols and
+                0.5 <= float(com.mask.rows) / com.mask.cols <= 4)
 
     def compute_char_scores(self):
         self.obj_classifier = CombinedClassifications()
@@ -140,13 +107,25 @@ class Hierarchy(object):
             words.append(word)
         self.words = sorted(words, key=lambda w: w.pos)
 
-    def output(self):
+    def output(self, show=False):
+        f = sys.stdout
         line = self.words[0].pos[0]
+        if show:
+            cpimg = cv.CloneMat(self.img)
         for w in self.words:
             if w.pos[0] != line:
                 line = w.pos[0]
-                print
-            print w.string(),
+                f.write('\n')
+            f.write(w.string() + ' ')
+            f.flush()
+            if show:
+                xmin = min([c.bounding_box[0] for c in w.chars])
+                xmax = max([c.bounding_box[2] for c in w.chars])
+                ymin = min([c.bounding_box[1] for c in w.chars])
+                ymax = max([c.bounding_box[3] for c in w.chars])
+                cv.Rectangle(cpimg, (xmin, ymin), (xmax, ymax), color=128, thickness=2)
+                showimg(cpimg)
+        f.write('\n')
 
 class ImgObjClassifications(Classifications):
 
@@ -174,4 +153,4 @@ def iterseq(s):
 if __name__ == '__main__':
     i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
     h = Hierarchy(i)
-    h.output()
+    h.output(show=True)
