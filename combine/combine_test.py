@@ -17,7 +17,7 @@ class CombinedClassifications(Classifications):
     def add(self, sub_cls):
         sub_rankings = sub_cls.rankings()
         max_cert = float(sub_cls.certainty(sub_rankings[0]))
-        min_cert = sub_cls.certainty(sub_rankings[-1])
+        min_cert = 0  #sub_cls.certainty(sub_rankings[-1])
         if max_cert != min_cert:
             normalized_certainties = [(sub_cls.certainty(obj) - min_cert) / (max_cert - min_cert) for obj in sub_rankings]
         else:
