@@ -3,7 +3,6 @@
 import cv
 
 import numpy as np
-from scipy.interpolate import interp1d
 from scipy.signal import fftconvolve
 from scipy.stats.stats import pearsonr
 
@@ -31,12 +30,9 @@ def cont_corr(ai, aj, show=False):
 
 def scale_size(a, s):
     na = len(a)
-    y = interp1d(range(na), a)
-    b = np.empty_like(s)
-    nb = len(b)
-    for i in range(nb):
-        b[i] = y(i * (na - 1.) / (nb - 1))
-    return b
+    ns = len(s)
+    xs = [i * (na - 1.) / (ns - 1) for i in range(ns)]
+    return np.interp(xs, range(na), a)
 
 def find_shift(a, b):
     c = fftconvolve(np.array(a), np.array(b[::-1]))  # Reverse for cross-correlation

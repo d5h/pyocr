@@ -153,4 +153,4 @@ def iterseq(s):
 if __name__ == '__main__':
     i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
     h = Hierarchy(i)
-    h.output(show=True)
+    h.output()
