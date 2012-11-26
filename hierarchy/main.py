@@ -87,8 +87,17 @@ class Hierarchy(object):
                 word = Word(pos=pos)
                 word.chars.append(c)
             for n, d in enumerate(objs):
-                ylim = max(h, d.bounding_box[3] - d.bounding_box[1]) / 2.0
-                if abs((d.bounding_box[1] + d.bounding_box[3]) / 2.0 - y) < ylim:
+                # Find vertical overlap to decide whether or not to
+                # break the line.
+                if c.bounding_box[1] < d.bounding_box[1]:
+                    a0, a1 = c.bounding_box[1], c.bounding_box[3]
+                    b0, b1 = d.bounding_box[1], d.bounding_box[3]
+                else:
+                    a0, a1 = d.bounding_box[1], d.bounding_box[3]
+                    b0, b1 = c.bounding_box[1], c.bounding_box[3]
+                overlap = max(0, a1 - b0) - max(0, a1 - b1)
+                overlap_percent = float(overlap) / min(a1 - a0, b1 - b0)
+                if 0.1 < overlap_percent:
                     if (c.bounding_box[2] - c.bounding_box[0] + d.bounding_box[2] - d.bounding_box[0]) / 4.0 \
                            < (d.bounding_box[0] - c.bounding_box[2]):
                         words.append(word)
