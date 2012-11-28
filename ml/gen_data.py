@@ -13,9 +13,10 @@ from common.genimg import draw_text, load_font
 
 class DataGenerator(object):
 
-    def __init__(self, fonts, chars):
+    def __init__(self, fonts, chars, noise_images=[]):
         self.fonts = fonts
         self.chars = chars
+        self.noise_images = noise_images
 
     def generate(self, output):
         image_size = 64
@@ -30,6 +31,11 @@ class DataGenerator(object):
                 coms = connected_components(mat)
                 com = sorted(coms, key=lambda c: c.mask.rows * c.mask.cols, reverse=True)[0]
                 output.write("%s,%f,%f,%f,%f\n" % (c, com.intensity, com.x_sym, com.y_sym, com.xy_sym))
+
+        for noise_img in self.noise_images:
+            mat = cv.LoadImageM(noise_img, cv.CV_LOAD_IMAGE_GRAYSCALE)
+            for com in connected_components(mat):
+                output.write(",%f,%f,%f,%f\n" % (com.intensity, com.x_sym, com.y_sym, com.xy_sym))
 
 def main(fonts, chars, output):
     dg = DataGenerator(fonts, chars)
