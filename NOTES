@@ -73,6 +73,41 @@ Incorrect classifications:
           Thought R was P (certainty: 0.573); alternatives were p, e, y
           Thought t was f (certainty: 0.873); alternatives were t, T, r
 
+ML
+==
+
+The idea of this classifier is to use a simple linear model classifier
+(perceptron) using features that can be quickly extracted during
+connected components analysis.  The features I am going to start with
+are intensity and symmetry based, as many characters exhibit some form
+of symmetry and these are cheap to compute.  The ones I will use in
+the initial implementation are symmetry about the vertical and
+horizontal axes, and symmetry about both at the same time.
+
+Hence I will start with four features, giving me five degrees of
+freedom (one for the classification threshold).  I'd like a
+realistically biased data set to train with, so more negatives than
+positives.  With a VC dimension of five, it seems reasonable to see
+how the classifier generalizes with a data set of 500.  I'll start by
+using 2% positives, as that is close to what would be seen in the real
+world (actually optimistic considering especially noise).
+
+The trainer will initialize the weights of the model for each
+character, and then go through the following loop 10 times.  It will
+generate each character in turn from the alphabet, and then several
+which are simply noise (pull a connected component from some random
+image).  It will add some noise to the character, either speckles
+around the border, or some slight rotation, etc.  It then extracts the
+features and uses them to train each classifier.  If we use the pocket
+algorithm for this, we'll need to keep track of the features to
+calculate the error at each iteration.  Hence, we could simply
+generate all the images and feature data up front, and perhaps use
+linear regression to get a head start, then optimize each classifier
+in turn using the data set.
+
+We can generate the data set independently and reuse it if we change
+the model later.
+
 Contours
 ========
 

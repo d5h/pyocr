@@ -91,15 +91,30 @@ class ConCom(object):
         w = part.xmax - part.xmin + 1
         h = part.ymax - part.ymin + 1
         com = cls(w, h)
+        on_val = 255
         on = 0
         subl = label_mat[part.ymin: part.ymax + 1, part.xmin: part.xmax + 1]
         for r in range(subl.rows):
             for c in range(subl.cols):
                 if subl[r, c] in part.labels:
-                    com.mask[r, c] = 255
+                    com.mask[r, c] = on_val
                     on += 1
         com.offset = part.xmin, part.ymin
         com.intensity = float(on) / (w * h)
+
+        com.x_sym = com.y_sym = com.xy_sym = 0.0
+        for r in range(h):
+            for c in range(w):
+                if c < w / 2:
+                    com.x_sym += xnor(com.mask[r, c], com.mask[r, w - c - 1])
+                if r < h / 2:
+                    com.y_sym += xnor(com.mask[r, c], com.mask[h - r - 1, c])
+                    com.xy_sym += xnor(com.mask[r, c], com.mask[h - r - 1, w - c - 1])
+
+        com.x_sym /= (w / 2) * h
+        com.y_sym /= (h / 2) * w
+        com.xy_sym /= (h / 2) * w
+
         return com
 
     def __init__(self, width, height):
@@ -110,6 +125,12 @@ class ConCom(object):
         cv.Set(self.border_mask, 0)
         self.offset = (-1, -1)
         self.intensity = -1
+        self.x_sym = -1
+        self.y_sym = -1
+        self.xy_sym = -1
+
+def xnor(x, y):
+    return bool(x) == bool(y)
 
 
 if __name__ == '__main__':
@@ -119,4 +140,5 @@ if __name__ == '__main__':
     coms = connected_components(i)
     print len(coms)
     for c in sorted(coms, key=lambda c: c.mask.rows * c.mask.cols, reverse=True)[:15]:
+        print c.intensity, c.x_sym, c.y_sym, c.xy_sym
         showimg(c.mask)
