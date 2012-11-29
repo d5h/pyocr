@@ -111,9 +111,11 @@ class ConCom(object):
                     com.y_sym += xnor(com.mask[r, c], com.mask[h - r - 1, c])
                     com.xy_sym += xnor(com.mask[r, c], com.mask[h - r - 1, w - c - 1])
 
-        com.x_sym /= (w / 2) * h
-        com.y_sym /= (h / 2) * w
-        com.xy_sym /= (h / 2) * w
+        if w / 2 != 0:
+            com.x_sym /= (w / 2) * h
+        if h / 2 != 0:
+            com.y_sym /= (h / 2) * w
+            com.xy_sym /= (h / 2) * w
 
         return com
 

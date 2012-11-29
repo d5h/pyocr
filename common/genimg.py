@@ -43,6 +43,7 @@ def find_font(name):
         path = os.path.join(d, '%s.ttf' % name)
         if os.path.exists(path):
             return path
+    raise ValueError("Can't find font: %s" % name)
 
 
 if __name__ == '__main__':
