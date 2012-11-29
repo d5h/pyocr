@@ -29,13 +29,23 @@ class DataGenerator(object):
                 draw_text(font, c, image)
                 cv.SetData(mat, image.tostring())
                 coms = connected_components(mat)
-                com = sorted(coms, key=lambda c: c.mask.rows * c.mask.cols, reverse=True)[0]
-                output.write("%s,%f,%f,%f,%f\n" % (c, com.intensity, com.x_sym, com.y_sym, com.xy_sym))
+                com = largest_component(coms)
+                output.write(c + ",%f,%f,%f,%f\n" % params_from_component(com))
 
         for noise_img in self.noise_images:
             mat = cv.LoadImageM(noise_img, cv.CV_LOAD_IMAGE_GRAYSCALE)
             for com in connected_components(mat):
-                output.write(",%f,%f,%f,%f\n" % (com.intensity, com.x_sym, com.y_sym, com.xy_sym))
+                output.write(",%f,%f,%f,%f\n" % params_from_component(com))
+
+def largest_component(coms):
+    # FIXME: Not really the area, but it'll do.
+    return sorted(coms, key=lambda c: c.mask.rows * c.mask.cols, reverse=True)[0]
+
+def params_from_component(com, with_one=False):
+    p = (1.0, com.intensity, com.x_sym, com.y_sym, com.xy_sym)
+    if with_one:
+        return p
+    return p[1:]
 
 def main(fonts, chars, output):
     dg = DataGenerator(fonts, chars)
