@@ -49,7 +49,7 @@ if __name__ == '__main__':
     if len(args) == 1:
         i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
         classifications = test(i)
-        rankings = classifications.rankings(limit=4)
+        rankings = classifications.rankings()
         for r in rankings:
             print "guess = %s; certainty = %.4f" % (r, classifications.certainty(r))
     else:
