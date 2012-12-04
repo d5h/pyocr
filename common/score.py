@@ -49,8 +49,8 @@ def score_files(files, test, ignore_case=True):
             ave_incorrect_certainty += cert
 
     n = len(files)
-    ave_correct_certainty = float(ave_correct_certainty) / correct
-    ave_incorrect_certainty = float(ave_incorrect_certainty) / (n - correct)
+    ave_correct_certainty = float(ave_correct_certainty) / correct if correct != 0 else -1
+    ave_incorrect_certainty = float(ave_incorrect_certainty) / (n - correct) if (n - correct) != 0 else -1
     print 'Classified %d/%d correctly (%.2f%%)' % (correct, n, 100. * correct / n)
     print 'Average certainty for correct classification: %.3f (min: %.3f)' % (ave_correct_certainty, min_correct_certainty)
     print 'Average certainty for incorrect classification: %.3f (max: %.3f)' % (ave_incorrect_certainty, max_incorrect_certainty)

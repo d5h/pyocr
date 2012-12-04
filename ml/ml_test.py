@@ -9,6 +9,7 @@ from common.concom import connected_components
 from common.score import Classifications, score_files
 from gen_data import largest_component, params_from_component
 from hypotheses import models
+from train import Trainer
 
 
 class MLClassifications(Classifications):
@@ -22,7 +23,7 @@ class MLClassifications(Classifications):
         self._classes[char] = cls
 
     def certainty(self, char):
-        return 1 - self._error if 0 < self._classes[char] else self._error
+        return self._classes[char]
 
     def rankings(self, limit=None, ignore_case=True):
         r = sorted(self._classes, key=self.certainty, reverse=True)
@@ -35,7 +36,7 @@ def test(image, char=None):
     xs = params_from_component(com, with_one=True)
     for c, ws in models.items():
         print c, dot(xs, ws)
-        classifications.add(c, sign(dot(xs, ws)))
+        classifications.add(c, Trainer.sigmoid(dot(xs, ws)))
 
     return classifications
 

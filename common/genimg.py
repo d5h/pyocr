@@ -9,7 +9,9 @@ import Image, ImageDraw, ImageFont
 font_dirs = [
     '.',
     '/usr/share/fonts/truetype/freefont',
-    '/usr/share/fonts/truetype/msttcorefonts'
+    '/usr/share/fonts/truetype/msttcorefonts',
+    '/usr/share/fonts/truetype/liberation',
+    '/usr/share/fonts/truetype/ttf-dejavu'
     ]
 
 

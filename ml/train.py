@@ -5,12 +5,15 @@ from random import randrange
 
 import numpy as np
 from numpy.linalg import lstsq
+from scipy.optimize.optimize import fmin_bfgs
 
 
 class Trainer(object):
 
-    def __init__(self, data):
+    def __init__(self, data, alpha=0.01):
+        """alpha is the regularization coefficient."""
         self.data = []
+        self.alpha = alpha
         self.classes = set()
         self.models = {}
         self.load_data(data)
@@ -24,60 +27,60 @@ class Trainer(object):
                     self.classes.add(cls)
                 self.data.append((xs, cls))
 
-    def train(self, epochs=100):
+    @staticmethod
+    def sigmoid(s):
+        return np.exp(s) / (1 + np.exp(s))
+
+    def train(self):
         for cls in self.classes:
-            # Use linear regression to initialize weights
+            print "Training on", cls
             x, y = self.get_classified_data(cls)
-            w = lstsq(x, y)[0]
+            w = np.random.random_sample(len(x[0]))
+            w = fmin_bfgs(self.make_error(x, y), w, fprime=self.make_error_gradient(x, y))
+            self.models[cls] = w
 
-            n = y.shape[0]
-            # Find positive classifications.  Because we have so many
-            # negatives, we make sure that the positives classified
-            # correctly.  Otherwise they do not contribute enough to
-            # the error.
-            positive_rows = [i for i in range(n) if 0 < y[i]]
-            for p in positive_rows:
-                w = self.adjust(w, x[p], y[p])
+    def make_error(self, xs, ys):
+        def error(w):
+            e = 0.0
+            for x, y in zip(xs, ys):
+                s = np.exp(-y * np.dot(x, w))
+                e += np.log(1 + s)
+            return e / len(ys) + self.alpha * np.dot(w, w) / 2
 
-            error = self.calc_error(w, x, y)
-            for _ in range(epochs):
-                i = randrange(n)
-                v = self.adjust(w, x[i], y[i])
-                v_error = self.calc_error(v, x, y)
-                if v_error < error:
-                    w = v
-                    error = v_error
-
-            self.models[cls] = tuple(w)
-
-    def adjust(self, w, x, y):
-        if y * np.dot(w, x) < 0:
-            return w + y * x
-        return w
-
-    def calc_error(self, w, x, y):
-        error = 0
-        n = y.shape[0]
-        for i in range(n):
-            if y[i] * np.dot(w, x[i]) < 0:
-                if 0 < y[i]:
-                    error += n
-                else:
-                    error += 1
         return error
+
+    def make_error_gradient(self, xs, ys):
+        def error_gradient(w):
+            e = np.zeros(len(w))
+            for x, y in zip(xs, ys):
+                s = 1 + np.exp(y * np.dot(x, w))
+                e -= y * x / s
+            e /= len(ys)
+            e += self.alpha * w
+            return e
+
+        return error_gradient
 
     def get_classified_data(self, for_cls):
         """Returns the matrix X and vector Y such that the row X[i] is
         classified as Y[i]."""
 
-        rows = len(self.data)
+        rows = 0
+        for xs, cls in self.data:
+            if not cls or cls == for_cls:
+                rows += 1
+
         cols = len(self.data[0][0]) + 1
         x = np.empty((rows, cols))
         y = np.empty(rows)
-        for i, (xs, cls) in enumerate(self.data):
-            x[i][0] = 1
-            x[i][1:] = xs
-            y[i] = 2 * (cls == for_cls) - 1
+
+        i = 0
+        for xs, cls in self.data:
+            if not cls or cls == for_cls:
+                x[i][0] = 1
+                x[i][1:] = xs
+                y[i] = 2 * (cls == for_cls) - 1
+                i += 1
 
         return x, y
 
@@ -87,6 +90,7 @@ class Trainer(object):
 
     def output_fp(self, fp):
         fp.write("# Auto-generated\n")
+        fp.write("from numpy import array\n")
         fp.write("models = %s\n" % pformat(self.models))
 
 
