@@ -8,7 +8,7 @@ from numpy import dot
 from common.concom import connected_components
 from common.score import Classifications, score_files
 from gen_data import largest_component, params_from_component
-from hypotheses import models
+from hypotheses import models, polynomial_transform_order
 from train import Trainer
 
 
@@ -35,8 +35,9 @@ def test(image, char=None):
     com = largest_component(coms)
     xs = params_from_component(com, with_one=True)
     for c, ws in models.items():
-        print c, dot(xs, ws)
-        classifications.add(c, Trainer.sigmoid(dot(xs, ws)))
+        s = dot(ws, Trainer.get_transformed_data(xs, polynomial_transform_order))
+        print c, s
+        classifications.add(c, s)
 
     return classifications
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from itertools import combinations_with_replacement
 from pprint import pformat
 from random import randrange
 
@@ -10,12 +11,13 @@ from scipy.optimize.optimize import fmin_bfgs
 
 class Trainer(object):
 
-    def __init__(self, data, alpha=0.01):
+    def __init__(self, data, alpha=0.01, polynomial_transform_order=1):
         """alpha is the regularization coefficient."""
         self.data = []
         self.alpha = alpha
         self.classes = set()
         self.models = {}
+        self.polynomial_transform_order = polynomial_transform_order
         self.load_data(data)
 
     def load_data(self, filename):
@@ -35,15 +37,25 @@ class Trainer(object):
         for cls in self.classes:
             print "Training on", cls
             x, y = self.get_classified_data(cls)
-            w = np.random.random_sample(len(x[0]))
+            z0 = self.get_transformed_data(x[0], self.polynomial_transform_order)
+            w = np.random.random_sample(len(z0))
             w = fmin_bfgs(self.make_error(x, y), w, fprime=self.make_error_gradient(x, y))
             self.models[cls] = w
+
+    @staticmethod
+    def get_transformed_data(x, poly_order):
+        if poly_order <= 1:
+            z = x
+        else:
+            z = [a * b for (a, b) in combinations_with_replacement(x, poly_order)]
+        return np.array(z)
 
     def make_error(self, xs, ys):
         def error(w):
             e = 0.0
             for x, y in zip(xs, ys):
-                s = np.exp(-y * np.dot(x, w))
+                z = self.get_transformed_data(x, self.polynomial_transform_order)
+                s = np.exp(-y * np.dot(z, w))
                 e += np.log(1 + s)
             return e / len(ys) + self.alpha * np.dot(w, w) / 2
 
@@ -53,8 +65,9 @@ class Trainer(object):
         def error_gradient(w):
             e = np.zeros(len(w))
             for x, y in zip(xs, ys):
-                s = 1 + np.exp(y * np.dot(x, w))
-                e -= y * x / s
+                z = self.get_transformed_data(x, self.polynomial_transform_order)
+                s = 1 + np.exp(y * np.dot(z, w))
+                e -= y * z / s
             e /= len(ys)
             e += self.alpha * w
             return e
@@ -92,6 +105,7 @@ class Trainer(object):
         fp.write("# Auto-generated\n")
         fp.write("from numpy import array\n")
         fp.write("models = %s\n" % pformat(self.models))
+        fp.write("polynomial_transform_order = %d\n" % self.polynomial_transform_order)
 
 
 if __name__ == '__main__':
