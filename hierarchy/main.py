@@ -11,19 +11,22 @@ from common.score import Classifications
 from common.show import show as showimg
 from common.concom import connected_components
 from contours.cont_test import ContClassifications, test as cont_test
+from ml.ml_test import test as ml_test
 from templates.mask_test import test as mask_test
 
 
 class ImgObj(object):
 
     def __init__(self, component, hierarchy):
+        self.mask = component.mask
+        self.border_mask = component.border_mask
         self.hierarchy = hierarchy
         x1 = component.offset[0]
         y1 = component.offset[1]
-        x2 = x1 + component.mask.cols + 1
-        y2 = y1 + component.mask.rows + 1
+        x2 = x1 + self.mask.cols + 1
+        y2 = y1 + self.mask.rows + 1
         self.bounding_box = x1, y1, x2, y2
-        self.char_cls = hierarchy.char_test(component.border_mask)
+        self.char_cls = hierarchy.char_test(self.border_mask)
         self.char = self.char_cls.rankings(limit=1)[0]
         self.char_score = self.char_cls.certainty(self.char)
 
@@ -58,8 +61,15 @@ class Hierarchy(object):
         self.obj_classifier = CombinedClassifications()
         cls = ImgObjClassifications({obj: obj.char_score for obj in self.objs})
         self.obj_classifier.add(cls)
+        cls = ImgObjClassifications({obj: self.char_ml_score(obj) for obj in self.objs})
+        self.obj_classifier.add(cls)
         cls = ImgObjClassifications({obj: self.char_y_score(obj) for obj in self.objs})
         self.obj_classifier.add(cls)
+
+    def char_ml_score(self, obj):
+        classifications = ml_test(obj.mask)
+        best = classifications.rankings()[0]
+        return 0.1 < classifications.certainty(best)
 
     def char_y_score(self, obj):
         height = self.img.rows

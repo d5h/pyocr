@@ -3,7 +3,7 @@
 from math import copysign
 
 import cv
-from numpy import dot
+from numpy import dot, mean
 
 from common.concom import connected_components
 from common.score import Classifications, score_files
@@ -52,7 +52,11 @@ if __name__ == '__main__':
         i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
         classifications = test(i)
         rankings = classifications.rankings()
-        for r in rankings:
-            print "guess = %s; certainty = %.4f" % (r, classifications.certainty(r))
+        certainties = [classifications.certainty(r) for r in rankings]
+        for n, r in enumerate(rankings):
+            print "guess = %s; certainty = %.4f" % (r, certainties[n])
+        print "mean certainty = %.4f" % mean(certainties)
+        positive = [c for c in certainties if 0 < c]
+        print "num positive = %d (%d%%)" % (len(positive), round(100.0 * len(positive) / len(certainties)))
     else:
         score_files(args, test)
