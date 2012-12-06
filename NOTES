@@ -49,64 +49,33 @@ challenges, but it's working well for the most part now.
 Combine
 =======
 
-Dope shit!!!
+Look into using better aggregation schemes, such as standardizing the
+data before multiplying certainties, or going a whole new route and
+try boosting.
 
-Classified 13/15 correctly (86.67%)
-Average certainty for correct classification: 0.901 (min: 0.527)
-Average certainty for incorrect classification: 0.812 (max: 0.910)
-Incorrect classifications:
-          Thought G was C (certainty: 0.910); alternatives were c, G, e
-          Thought N was H (certainty: 0.714); alternatives were N, K, I
+kNN
+===
 
-Also good on serif.
-
-Classified 44/52 correctly (84.62%)
-Average certainty for correct classification: 0.918 (min: 0.604)
-Average certainty for incorrect classification: 0.768 (max: 0.993)
-Incorrect classifications:
-          Thought e was C (certainty: 0.993); alternatives were c, e, O
-          Thought G was o (certainty: 0.767); alternatives were C, O, c
-          Thought i was j (certainty: 0.764); alternatives were x, f, X
-          Thought I was j (certainty: 0.692); alternatives were i, t, I
-          Thought l was j (certainty: 0.780); alternatives were f, I, l
-          Thought P was F (certainty: 0.703); alternatives were P, r, y
-          Thought R was P (certainty: 0.573); alternatives were p, e, y
-          Thought t was f (certainty: 0.873); alternatives were t, T, r
+Nearest neighbor might be a good way to separate letters from noise.
+Simply generate a training set with features from both letters and
+noise, and then the test would be to find the K nearest neighbors of a
+test point, and use the number of letters divided by K as the
+certainty of the classification.
 
 ML
 ==
 
-The idea of this classifier is to use a simple linear model classifier
-(perceptron) using features that can be quickly extracted during
-connected components analysis.  The features I am going to start with
-are intensity and symmetry based, as many characters exhibit some form
-of symmetry and these are cheap to compute.  The ones I will use in
-the initial implementation are symmetry about the vertical and
-horizontal axes, and symmetry about both at the same time.
-
-Hence I will start with four features, giving me five degrees of
-freedom (one for the classification threshold).  I'd like a
-realistically biased data set to train with, so more negatives than
-positives.  With a VC dimension of five, it seems reasonable to see
-how the classifier generalizes with a data set of 500.  I'll start by
-using 2% positives, as that is close to what would be seen in the real
-world (actually optimistic considering especially noise).
-
-The trainer will initialize the weights of the model for each
-character, and then go through the following loop 10 times.  It will
-generate each character in turn from the alphabet, and then several
-which are simply noise (pull a connected component from some random
-image).  It will add some noise to the character, either speckles
-around the border, or some slight rotation, etc.  It then extracts the
-features and uses them to train each classifier.  If we use the pocket
-algorithm for this, we'll need to keep track of the features to
-calculate the error at each iteration.  Hence, we could simply
-generate all the images and feature data up front, and perhaps use
-linear regression to get a head start, then optimize each classifier
-in turn using the data set.
-
-We can generate the data set independently and reuse it if we change
-the model later.
+Machine learning using logistic regression is not performing too well.
+It only classifies letters correctly about 30% of the time.  This may
+just be a hard problem (separating signals from noise), but I'm
+starting to suspect I'm just using poor features.  Symmetry is a
+fairly tolerant measure, and some letters are nearly indistinguishable
+from each other (e.g., I and O are both symmetric about every axis,
+and S and Z are similar in their symmetry).  Perhaps we could succeed
+more simply by finding more telling features.  What about derivatives
+of intensity across rows (or columns) as we scan from top to bottom
+(or left to right)?  Since noise typically has large derivatives, this
+could be a useful feature.
 
 Contours
 ========
