@@ -7,7 +7,7 @@ from numpy import dot
 
 from common.concom import connected_components
 from common.score import Classifications, score_files
-from gen_data import largest_component, params_from_component
+from common.gen_data import largest_component, params_from_component
 from hypotheses import models, polynomial_transform_order
 from train import Trainer
 
