@@ -67,7 +67,7 @@ def largest_component(coms):
     return sorted(coms, key=lambda c: c.mask.rows * c.mask.cols, reverse=True)[0]
 
 def params_from_component(com, with_one=False):
-    p = [1.0, com.intensity, com.x_sym, com.y_sym, com.xy_sym] + list(com.intensity_grid.reshape(-1))
+    p = [1.0, com.x_sym, com.y_sym, com.xy_sym] + list(com.intensity_grid.reshape(-1))
     if with_one:
         return p
     return p[1:]
