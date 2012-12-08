@@ -8,6 +8,7 @@ import Image, ImageDraw, ImageFont
 
 font_dirs = [
     '.',
+    '/usr/share/fonts/truetype/signs',
     '/usr/share/fonts/truetype/freefont',
     '/usr/share/fonts/truetype/msttcorefonts',
     '/usr/share/fonts/truetype/liberation',
@@ -50,4 +51,4 @@ def find_font(name):
 
 if __name__ == '__main__':
     import sys
-    main('FreeSansBold', string.ascii_letters + string.digits + ':-,.!')
+    main(sys.argv[1], string.ascii_letters + string.digits + ':-,.!')

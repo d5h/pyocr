@@ -3,8 +3,7 @@
 import cv
 
 
-window = "Demo"
-cv.NamedWindow(window, cv.CV_WINDOW_AUTOSIZE)
+window = None
 
 
 def plot(*args, **kwargs):
@@ -24,6 +23,11 @@ def hist(*args, **kwargs):
     plt.show()
 
 def show(img):
+    global window
+    if window is None:
+        window = "Demo"
+        cv.NamedWindow(window, cv.CV_WINDOW_AUTOSIZE)
+
     cv.ShowImage(window, img)
     return cv.WaitKey()
 
