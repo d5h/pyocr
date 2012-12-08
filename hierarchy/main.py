@@ -7,10 +7,13 @@ import numpy as np
 
 from combine.combine_test import CombinedClassifications, Combiner
 from common.bin import binary
+from common.data_path import data_path
 from common.score import Classifications
 from common.show import show as showimg
 from common.concom import connected_components
 from contours.cont_test import ContClassifications, test as cont_test
+from knn.knn_test import KNNTest
+#from ml.ml_test import test as ml_test
 from templates.mask_test import test as mask_test
 
 
@@ -41,7 +44,8 @@ class Hierarchy(object):
     def __init__(self, img):
         self.img = img
         self.binary_img = binary(img, invert=True)
-        self.char_test = Combiner([cont_test, mask_test]).test
+        knn_test = KNNTest(data_path)
+        self.char_test = Combiner([cont_test, mask_test, knn_test.test]).test
         self.objs = [
             ImgObj(x, self) for x in connected_components(self.binary_img) if self.good_component(x)
             ]
