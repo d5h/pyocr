@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import cv
+import numpy as np
 
 
 def connected_components(m):
@@ -103,6 +104,8 @@ class ConCom(object):
         com.intensity = float(on) / (w * h)
 
         com.x_sym = com.y_sym = com.xy_sym = 0.0
+        grid_ri = float(h) / com.intensity_grid.shape[0]
+        grid_ci = float(w) / com.intensity_grid.shape[1]
         for r in range(h):
             for c in range(w):
                 if c < w / 2:
@@ -110,6 +113,11 @@ class ConCom(object):
                 if r < h / 2:
                     com.y_sym += xnor(com.mask[r, c], com.mask[h - r - 1, c])
                     com.xy_sym += xnor(com.mask[r, c], com.mask[h - r - 1, w - c - 1])
+                grid_r = np.floor(r / grid_ri)
+                grid_c = np.floor(c / grid_ci)
+                grid_h = np.ceil(grid_ri * (grid_r + 1)) - np.ceil(grid_ri * grid_r)
+                grid_w = np.ceil(grid_ci * (grid_c + 1)) - np.ceil(grid_ci * grid_c)
+                com.intensity_grid[grid_r, grid_c] += com.mask[r, c] / (on_val * grid_h * grid_w)
 
         if w / 2 != 0:
             com.x_sym /= (w / 2) * h
@@ -119,7 +127,7 @@ class ConCom(object):
 
         return com
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, intensity_grid_rows=3, intensity_grid_cols=3):
         # Cache a copy of the mask with a border around it so we can
         # find contours.
         self.border_mask = cv.CreateMat(height + 2, width + 2, cv.CV_8U)
@@ -130,6 +138,7 @@ class ConCom(object):
         self.x_sym = -1
         self.y_sym = -1
         self.xy_sym = -1
+        self.intensity_grid = np.zeros((intensity_grid_rows, intensity_grid_cols))
 
 def xnor(x, y):
     return bool(x) == bool(y)

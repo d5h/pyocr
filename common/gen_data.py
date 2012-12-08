@@ -32,7 +32,7 @@ class DataGenerator(object):
             for com in connected_components(mat):
                 if 10 < com.mask.rows and 5 < com.mask.cols:
                     num_noise_points += 1
-                    output.write(",%f,%f,%f,%f\n" % params_from_component(com))
+                    output.write(",%s\n" % float_list_to_csv(params_from_component(com)))
                     if num_samples <= num_noise_points:
                         return num_samples
 
@@ -59,17 +59,20 @@ class DataGenerator(object):
                     cv.WarpAffine(mat, mapmat, rot)
                     coms = connected_components(mapmat)
                     com = largest_component(coms)
-                    output.write(c + ",%f,%f,%f,%f\n" % params_from_component(com))
+                    output.write(c + ",%s\n" % float_list_to_csv(params_from_component(com)))
 
 def largest_component(coms):
     # FIXME: Not really the area, but it'll do.
     return sorted(coms, key=lambda c: c.mask.rows * c.mask.cols, reverse=True)[0]
 
 def params_from_component(com, with_one=False):
-    p = (1.0, com.intensity, com.x_sym, com.y_sym, com.xy_sym)
+    p = [1.0, com.intensity, com.x_sym, com.y_sym, com.xy_sym] + list(com.intensity_grid.reshape(-1))
     if with_one:
         return p
     return p[1:]
+
+def float_list_to_csv(fs, fmt='%f'):
+    return ','.join([fmt % f for f in fs])
 
 def main(dg, output):
     if output:
