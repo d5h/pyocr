@@ -6,6 +6,8 @@ import cv
 
 from contours.cont_test import test as cont_test
 from templates.mask_test import test as mask_test
+from knn.knn_test import KNNTest
+from common.data_path import data_path
 from common.score import Classifications, score_files
 
 
@@ -48,7 +50,8 @@ class Combiner(object):
 if __name__ == '__main__':
     import sys
     args = sys.argv[1:]
-    c = Combiner([cont_test, mask_test])
+    knn_test = KNNTest(data_path)
+    c = Combiner([cont_test, mask_test, knn_test.test])
     if len(args) == 1:
         i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
         classifications = c.test(i)

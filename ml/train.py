@@ -23,8 +23,8 @@ class Trainer(object):
     def load_data(self, filename):
         with open(filename) as f:
             for line in f:
-                cls, rest = line.split(',', 1)
-                xs = [float(x) for x in rest.split(',')]
+                cls, rest = line.split('\t', 1)
+                xs = [float(x) for x in rest.split('\t')]
                 if cls:
                     self.classes.add(cls)
                 self.data.append((xs, cls))

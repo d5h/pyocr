@@ -6,6 +6,8 @@ import string
 import Image, ImageDraw, ImageFont
 
 
+characters = string.ascii_letters + string.digits + ':-,.!'
+
 font_dirs = [
     '.',
     '/usr/share/fonts/truetype/signs',
@@ -51,4 +53,4 @@ def find_font(name):
 
 if __name__ == '__main__':
     import sys
-    main(sys.argv[1], string.ascii_letters + string.digits + ':-,.!')
+    main(sys.argv[1], characters)

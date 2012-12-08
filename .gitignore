@@ -1,2 +1,3 @@
+common/data_path.py
 *.pyc
 *.png

@@ -8,6 +8,7 @@ from scikits import ann
 from common.concom import connected_components
 from common.score import Classifications, score_files
 from common.gen_data import largest_component, params_from_component
+from common.data_path import data_path
 
 
 class KNNTest(object):
@@ -21,7 +22,7 @@ class KNNTest(object):
         points = []
         with open(data_file) as fp:
             for line in fp:
-                fields = line.split(',')
+                fields = line.split('\t')
                 self.labels.append(fields[0])
                 self.label_set.add(fields[0])
                 points.append([float(f) for f in fields[1:]])
@@ -57,7 +58,7 @@ if __name__ == '__main__':
     import sys
     import cv
     args = sys.argv[1:]
-    test = KNNTest('../common/data.txt')
+    test = KNNTest(data_path)
     if len(args) == 1:
         i = cv.LoadImageM(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
         classifications = test.test(i)
