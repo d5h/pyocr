@@ -64,6 +64,9 @@ class Hierarchy(object):
         self.obj_classifier.add(cls)
         cls = ImgObjClassifications({obj: self.char_y_score(obj) for obj in self.objs})
         self.obj_classifier.add(cls)
+        size_guess = self.character_size_guess()
+        cls = ImgObjClassifications({obj: self.char_size_score(obj, size_guess) for obj in self.objs})
+        self.obj_classifier.add(cls)
 
     def char_y_score(self, obj):
         height = self.img.rows
@@ -76,6 +79,24 @@ class Hierarchy(object):
             other_y = (other.bounding_box[1] + other.bounding_box[3]) / 2.0
             score += (m - abs(y - other_y) ** 2) * self.obj_classifier.certainty(other)
         return score / (m * (len(self.objs) - 1))
+
+    def character_size_guess(self):
+        r = self.obj_classifier.rankings()
+        n = int(.25 * len(r)) + 1
+        probable_chars = r[:n]
+        w, h = 0., 0.
+        for c in probable_chars:
+            w += c.bounding_box[2] - c.bounding_box[0] + 1
+            h += c.bounding_box[3] - c.bounding_box[1] + 1
+        return w / n, h / n
+
+    def char_size_score(self, obj, size_guess):
+        w_guess, h_guess = size_guess
+        w = obj.bounding_box[2] - obj.bounding_box[0] + 1
+        h = obj.bounding_box[3] - obj.bounding_box[1] + 1
+        w_score = interval_score(0.5 * w_guess, w, 2 * w_guess)
+        h_score = interval_score(0.5 * h_guess, h, 2 * h_guess)
+        return w_score * h_score
 
     def group_words(self, score_threshold=0.5):
         objs = sorted(self.objs, key=lambda c: c.bounding_box[0])
@@ -139,6 +160,20 @@ class Hierarchy(object):
                 cv.Rectangle(cpimg, (xmin, ymin), (xmax, ymax), color=128, thickness=2)
                 showimg(cpimg)
         f.write('\n')
+
+def interval_score(a, x, b, c=1):
+    """Scores a value's distance from some interval.  If it's within
+    the interval, its score is 1.  If it fall outside, the score drops
+    off with the exponent of a square.  The parameter c is squared and
+    then divides the square and controls the drop off rate."""
+
+    if a <= x <= b:
+        return 1.0
+    if x < a:
+        z = a - x
+    else:
+        z = x - b
+    return np.exp(-(z / c) ** 2)
 
 class ImgObjClassifications(Classifications):
 

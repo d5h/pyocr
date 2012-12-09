@@ -31,6 +31,12 @@ We should look for cheaper features.  The algorithms used here are
 pretty slow, and we should be able to learn some cheap features that
 separate the data well.
 
+Spell
+=====
+
+Nice links for spell-correcting algorithms:
+http://stackoverflow.com/a/2294926
+
 Hierarchy
 =========
 
