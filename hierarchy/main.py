@@ -14,6 +14,7 @@ from common.concom import connected_components
 from contours.cont_test import ContClassifications, test as cont_test
 from knn.knn_test import KNNTest
 #from ml.ml_test import test as ml_test
+from spell.correct import SpellingCorrector
 from templates.mask_test import test as mask_test
 
 
@@ -50,7 +51,8 @@ class Hierarchy(object):
             ImgObj(x, self) for x in connected_components(self.binary_img) if self.good_component(x)
             ]
         self.compute_char_scores()
-        self.group_words()
+        self.group_words(score_threshold=0.2)
+        self.spell_corrector = SpellingCorrector('/usr/share/dict/words')
 
     def good_component(self, com):
         return (#0.5 < com.intensity and
@@ -141,25 +143,43 @@ class Hierarchy(object):
             words.append(word)
         self.words = sorted(words, key=lambda w: w.pos)
 
-    def output(self, show=False):
-        f = sys.stdout
-        line = self.words[0].pos[0]
+    def lines(self, show=False):
+        result = []
+        line = []
+        line_no = self.words[0].pos[0]
         if show:
             cpimg = cv.CloneMat(self.img)
+
         for w in self.words:
-            if w.pos[0] != line:
-                line = w.pos[0]
-                f.write('\n')
-            f.write(w.string() + ' ')
-            f.flush()
+            if w.pos[0] != line_no:
+                line_no = w.pos[0]
+                result.append(line)
+                line = []
+                if show:
+                    print '\n'
+
+            line.append(w)
             if show:
+                print w.string()
                 xmin = min([c.bounding_box[0] for c in w.chars])
                 xmax = max([c.bounding_box[2] for c in w.chars])
                 ymin = min([c.bounding_box[1] for c in w.chars])
                 ymax = max([c.bounding_box[3] for c in w.chars])
                 cv.Rectangle(cpimg, (xmin, ymin), (xmax, ymax), color=128, thickness=2)
                 showimg(cpimg)
-        f.write('\n')
+
+        result.append(line)
+        return result
+
+    def text(self, correct=True):
+        lines = self.lines()
+        if correct:
+            lines = [self.spell_corrector.correct_phrase(p) for p in lines]
+        text_lines = [' '.join(p) for p in lines]
+        return '\n'.join(text_lines)
+
+    def output(self):
+        print self.text()
 
 def interval_score(a, x, b, c=1):
     """Scores a value's distance from some interval.  If it's within
