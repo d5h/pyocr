@@ -37,7 +37,7 @@ class Word(object):
         self.chars = []
         self.pos = pos
 
-    def string(self):
+    def __str__(self):
         return ''.join([c.char for c in self.chars])
 
 class Hierarchy(object):
@@ -160,7 +160,7 @@ class Hierarchy(object):
 
             line.append(w)
             if show:
-                print w.string()
+                print w
                 xmin = min([c.bounding_box[0] for c in w.chars])
                 xmax = max([c.bounding_box[2] for c in w.chars])
                 ymin = min([c.bounding_box[1] for c in w.chars])
